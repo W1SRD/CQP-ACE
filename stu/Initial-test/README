@@ -12,6 +12,8 @@ insertrxi.sql		Load the rxi table with freq/mode/day/tod + rx fields
 indexrxi.sql		Build compund index on rxi with all fields
 rule1-ok.sql		Applies rule 1 as a select
 
+dropall.sql		Drops the tables qso and rxi
+
 These will all be automated by a PHP script using PDO to access a MYSQL 
 database.
 
