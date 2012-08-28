@@ -1,0 +1,27 @@
+This is the initial set of tests for QSO matching.
+
+Files (Apply in this order)
+
+qso.sql 		Creates the initial qso table in the DB
+rxi.sql			Creates the rxi table used by rule1-ok.sql
+loadqso.sql		Loads all QSO records from qsorecs.dbl into qso
+postloadnorm.sql	Normalizes qso.freq into bands rather than MHz
+findnonnorm.sql		Select to find remaining records not normalized
+			Finish these off by hand
+insertrxi.sql		Load the rxi table with freq/mode/day/tod + rx fields
+indexrxi.sql		Build compund index on rxi with all fields
+rule1-ok.sql		Applies rule 1 as a select
+
+These will all be automated by a PHP script using PDO to access a MYSQL 
+database.
+
+MYSQL is preferred over SQLite as the latter is quite limiting in many
+respects.
+
+These scripts should work on either as long as wildcard characters are
+mapped in postloadnorm.sql.
+
+Stu K6TU
+Version 1.0
+8/27/2012
+

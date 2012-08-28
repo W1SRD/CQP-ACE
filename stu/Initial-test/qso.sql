@@ -1,0 +1,17 @@
+# Create the QSO table from scratch
+
+DROP TABLE IF EXISTS qso;
+CREATE TABLE qso(
+  pk_qso integer primary key auto_increment,
+  freq varchar(6),
+  mode varchar(3),
+  day varchar(12),
+  tod varchar(4),
+  calls varchar(12),
+  ns integer,
+  qths varchar(4),
+  callr varchar(12),
+  nr integer,
+  qthr varchar(4)
+);
+
