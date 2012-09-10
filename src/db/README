@@ -1,0 +1,19 @@
+Author: Steve Dyer, W1SRD
+Date: 10-Sep-2012
+
+1. Enabling MySQL to read files using the MySQL infile loader
+
+The user loading must have the file priviledge.
+Apparmor or simlilar must be configured to allow the mysqld process to read files from the directory where the logs are placed.
+On Ubuntu, cd /etc/apparmor.d, sudo vi usr/sbin/mysqld and add /tmp/** r in the list of directories.
+Example to load files from the /tmp directory:
+...
+/var/lib/mysql/ r,
+...
+/var/log/mysql/ r,
+/var/log/mysql/* rw,
+/tmp/** r,
+..
+
+An alternative is to place the log files in a directory with read access already defined, for example /var/lib/mysql/.
+
