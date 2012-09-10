@@ -1,0 +1,8 @@
+Data:
+load remainder of aliases
+load club names and aliases
+Code:
+wrap main update query in procedure
+write queries for remainder of rules
+get LOG table data import
+
