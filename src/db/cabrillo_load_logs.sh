@@ -17,6 +17,6 @@ do
 	echo "Log Records"
 	echo `cat /tmp/ace_load.log | grep '^QSO: ' | wc -l`
 	echo
-	mysql --user=ace --password=ace CQP-ACE < CQP-ACE_log_load_infile.sql
+	mysql --user=ace --password=ace CQP-ACE < cabrillo_load_infile.sql
 	rm /tmp/ace_load.log
 done
