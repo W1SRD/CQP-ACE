@@ -18,7 +18,8 @@ QTH_SENT = trim(@qth_sent),
 CALLSIGN_RECEIVED = trim(@callsign_received),
 SERIAL_RECEIVED = trim(trim(leading '0' from @serial_received)),
 QTH_RECEIVED = trim(@qth_received),
-LOG_ID = (select ID from LOG where CALLSIGN = CALLSIGN_SENT),
+-- LOG_ID = (select ID from LOG where CALLSIGN = CALLSIGN_SENT),
+LOG_ID = 1,
 BAND = case when(FREQUENCY between '1800' and '2000') then '160'
             when(FREQUENCY between '3500' and '4000') then '80'
             when(FREQUENCY between '7000' and '7300') then '40'
@@ -26,10 +27,15 @@ BAND = case when(FREQUENCY between '1800' and '2000') then '160'
             when(FREQUENCY between '21000' and '21450') then '15'
             when(FREQUENCY between '28000' and '29700') then '10'
             when(FREQUENCY between '50000' and '54000') then '6'
+            when(FREQUENCY like '50') then '6'
             when(FREQUENCY between '144000' and '148000') then '2'
             when(FREQUENCY like '144') then '2'
             end,
 QSO_STATUS = 'NEW',
 LAST_UPDATED = CURRENT_TIMESTAMP,
 CREATE_DATE = CURRENT_TIMESTAMP;
+show errors;
+show warnings;
 set FOREIGN_KEY_CHECKS = 1;
+-- This breaks where callsign_sent has mobile location e.g. /TULA, /SONO in the same log
+select count(*) as 'QSOs Loaded,' from QSO where CALLSIGN_SENT = @callsign_sent; 

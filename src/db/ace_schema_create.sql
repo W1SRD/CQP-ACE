@@ -395,5 +395,5 @@ INSERT INTO `QSO_STATUS` (`ID`, `NAME`) VALUES (12, 'NEW');
 
 COMMIT;
 
-SOURCE multipliers.sql
-SOURCE multiplier_alias.sql
+SOURCE CQP_multipliers.sql
+SOURCE CA_multiplier_alias.sql

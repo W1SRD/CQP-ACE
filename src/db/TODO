@@ -5,4 +5,6 @@ Code:
 wrap main update query in procedure
 write queries for remainder of rules
 get LOG table data import
-
+innodb sequential autoimcrement
+how to flat/pivot/turn rows into cols using shell or awk
+doc file cleanups and sequence
