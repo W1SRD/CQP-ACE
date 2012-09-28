@@ -4,8 +4,10 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL,ALLOW_INVALID_DATES';
 
 DROP SCHEMA IF EXISTS `mydb` ;
 CREATE SCHEMA IF NOT EXISTS `mydb` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci ;
+SHOW WARNINGS;
 DROP SCHEMA IF EXISTS `CQP-ACE` ;
-CREATE SCHEMA IF NOT EXISTS `CQP-ACE` ;
+CREATE SCHEMA IF NOT EXISTS `CQP-ACE` DEFAULT CHARACTER SET utf8 ;
+SHOW WARNINGS;
 USE `mydb` ;
 USE `CQP-ACE` ;
 
@@ -14,66 +16,123 @@ USE `CQP-ACE` ;
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `OPERATOR_CATEGORY` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `OPERATOR_CATEGORY` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(16) NOT NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB
 COMMENT = 'Possible values are:\n\nSINGLE-OP\nMULTI-SINGLE\nMULTI-MULTI\n';
 
+SHOW WARNINGS;
 CREATE UNIQUE INDEX `NAME_UNIQUE` ON `OPERATOR_CATEGORY` (`NAME` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `POWER_CATEGORY`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `POWER_CATEGORY` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `POWER_CATEGORY` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(16) NOT NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB
 COMMENT = 'Possible Values are:\n\nQRP\nLOW\nHIGH\n';
 
+SHOW WARNINGS;
 CREATE UNIQUE INDEX `NAME_UNIQUE` ON `POWER_CATEGORY` (`NAME` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `STATION_CATEGORY`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `STATION_CATEGORY` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `STATION_CATEGORY` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(16) NULL DEFAULT NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB
 COMMENT = 'Possible values are:\n\nFIXED\nSCHOOL\nMOBILE\nCCE';
 
+SHOW WARNINGS;
 CREATE UNIQUE INDEX `NAME_UNIQUE` ON `STATION_CATEGORY` (`NAME` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `TRANSMITTER_CATEGORY`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `TRANSMITTER_CATEGORY` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `TRANSMITTER_CATEGORY` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(16) NULL DEFAULT NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB
 COMMENT = 'This table may be redudant but possible values would be:\n\nON' /* comment truncated */;
 
+SHOW WARNINGS;
 CREATE UNIQUE INDEX `NAME_UNIQUE` ON `TRANSMITTER_CATEGORY` (`NAME` ASC) ;
 
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `CLUB_LOCATION`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `CLUB_LOCATION` ;
+
+SHOW WARNINGS;
+CREATE  TABLE IF NOT EXISTS `CLUB_LOCATION` (
+  `ID` INT NOT NULL AUTO_INCREMENT ,
+  `LOCATION` VARCHAR(4) NOT NULL ,
+  PRIMARY KEY (`ID`) )
+ENGINE = InnoDB;
+
+SHOW WARNINGS;
+CREATE UNIQUE INDEX `LOCATION_UNIQUE` ON `CLUB_LOCATION` (`LOCATION` ASC) ;
+
+SHOW WARNINGS;
+
+-- -----------------------------------------------------
+-- Table `CLUB`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `CLUB` ;
+
+SHOW WARNINGS;
+CREATE  TABLE IF NOT EXISTS `CLUB` (
+  `ID` INT NOT NULL AUTO_INCREMENT ,
+  `NAME` VARCHAR(255) NOT NULL ,
+  `LOCATION` VARCHAR(4) NOT NULL ,
+  PRIMARY KEY (`ID`) ,
+  CONSTRAINT `FK_CLUB_LOCATION`
+    FOREIGN KEY (`LOCATION` )
+    REFERENCES `CLUB_LOCATION` (`LOCATION` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB
+COMMENT = 'Master table for Club names.\n\nLocation indicates whether the' /* comment truncated */;
+
+SHOW WARNINGS;
+CREATE UNIQUE INDEX `NAME_UNIQUE` ON `CLUB` (`NAME` ASC) ;
+
+SHOW WARNINGS;
+CREATE INDEX `FK_CLUB_LOCATION_idx` ON `CLUB` (`LOCATION` ASC) ;
+
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `MULTIPLIER`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `MULTIPLIER` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `MULTIPLIER` (
   `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(4) NOT NULL ,
@@ -84,46 +143,17 @@ CREATE  TABLE IF NOT EXISTS `MULTIPLIER` (
 ENGINE = InnoDB
 COMMENT = 'Contains all the unique multipliers for QSO scoring.\n\n58 Cal' /* comment truncated */;
 
+SHOW WARNINGS;
 CREATE UNIQUE INDEX `NAME_UNIQUE` ON `MULTIPLIER` (`NAME` ASC) ;
 
-
--- -----------------------------------------------------
--- Table `CLUB`
--- -----------------------------------------------------
-DROP TABLE IF EXISTS `CLUB` ;
-
-CREATE  TABLE IF NOT EXISTS `CLUB` (
-  `ID` INT NOT NULL AUTO_INCREMENT ,
-  `NAME` VARCHAR(255) NOT NULL ,
-  `LOCATION` VARCHAR(4) NOT NULL ,
-  PRIMARY KEY (`ID`) ,
-  CONSTRAINT `FK_CLUB_OPERATOR`
-    FOREIGN KEY (`ID` )
-    REFERENCES `OPERATOR` (`CLUB_ID` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `FK_CLUB_MULTIPLIER`
-    FOREIGN KEY (`LOCATION` )
-    REFERENCES `MULTIPLIER` (`NAME` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB
-COMMENT = 'Master table for Club names.\n\nLocation indicates whether the' /* comment truncated */;
-
-CREATE UNIQUE INDEX `NAME_UNIQUE` ON `CLUB` (`NAME` ASC) ;
-
-CREATE INDEX `FK_CLUB_OPERATOR` ON `CLUB` (`ID` ASC) ;
-
-CREATE INDEX `FK_CLUB_MULTIPLIER_idx` ON `CLUB` (`LOCATION` ASC) ;
-
-CREATE UNIQUE INDEX `ID_UNIQUE` ON `CLUB` (`ID` ASC) ;
-
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `LOG`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `LOG` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `LOG` (
   `ID` INT NOT NULL AUTO_INCREMENT ,
   `CALLSIGN` VARCHAR(16) NOT NULL ,
@@ -145,6 +175,7 @@ CREATE  TABLE IF NOT EXISTS `LOG` (
   `LOG_FILENAME` VARCHAR(64) NULL DEFAULT NULL ,
   `SOAPBOX` VARCHAR(2048) NULL DEFAULT NULL ,
   `CABRILLO_HEADER` TEXT NULL DEFAULT NULL ,
+  `QSO_RECS_PRESENT` TINYINT(1) NULL DEFAULT NULL ,
   `LAST_UPDATED` TIMESTAMP NULL DEFAULT NULL ,
   PRIMARY KEY (`ID`) ,
   CONSTRAINT `FK_LOG_OPERATOR_CATEGORY`
@@ -180,24 +211,32 @@ CREATE  TABLE IF NOT EXISTS `LOG` (
 ENGINE = InnoDB
 COMMENT = 'Master table for an entry.\n\nHolds all the information ncesar' /* comment truncated */;
 
-CREATE INDEX `FK_LOG_OPERATOR_CATEGORY` ON `LOG` (`OPERATOR_CATEGORY` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_LOG_OPERATOR_CATEGORY_idx` ON `LOG` (`OPERATOR_CATEGORY` ASC) ;
 
-CREATE INDEX `FK_LOG_POWER_CATEGORY` ON `LOG` (`POWER_CATEGORY` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_LOG_POWER_CATEGORY_idx` ON `LOG` (`POWER_CATEGORY` ASC) ;
 
-CREATE INDEX `FK_LOG_STATION_CATEGORY` ON `LOG` (`STATION_CATEGORY` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_LOG_STATION_CATEGORY_idx` ON `LOG` (`STATION_CATEGORY` ASC) ;
 
-CREATE INDEX `FK_LOG_TRANSMITTER_CATEGORY` ON `LOG` (`TRANSMITTER_CATEGORY` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_LOG_TRANSMITTER_CATEGORY_idx` ON `LOG` (`TRANSMITTER_CATEGORY` ASC) ;
 
-CREATE INDEX `FK_LOG_CLUB` ON `LOG` (`CLUB` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_LOG_CLUB_idx` ON `LOG` (`CLUB` ASC) ;
 
+SHOW WARNINGS;
 CREATE INDEX `FK_LOG_MULTIPLIER_idx` ON `LOG` (`STATION_LOCATION` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `OPERATOR`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `OPERATOR` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `OPERATOR` (
   `ID` INT NOT NULL AUTO_INCREMENT ,
   `LOG_ID` INT NOT NULL ,
@@ -209,49 +248,64 @@ CREATE  TABLE IF NOT EXISTS `OPERATOR` (
     FOREIGN KEY (`LOG_ID` )
     REFERENCES `LOG` (`ID` )
     ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `FK_OPERATOR_CLUB`
+    FOREIGN KEY (`CLUB_ID` )
+    REFERENCES `CLUB` (`ID` )
+    ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB
 COMMENT = 'Allows for partitioning of a score across multiple clubs.\n\nF' /* comment truncated */;
 
-CREATE INDEX `FK_OPERATOR_CLUB` ON `OPERATOR` (`CLUB_ID` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_OPERATOR_LOG_idx` ON `OPERATOR` (`LOG_ID` ASC) ;
 
-CREATE INDEX `FK_OPERATOR_LOG` ON `OPERATOR` (`LOG_ID` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_OPERATOR_CLUB_idx` ON `OPERATOR` (`CLUB_ID` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `QSO_STATUS`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `QSO_STATUS` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `QSO_STATUS` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(8) NOT NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB
 COMMENT = 'Holds the scored category of each QSO record.\n\nPossible valu' /* comment truncated */;
 
+SHOW WARNINGS;
 CREATE UNIQUE INDEX `NAME_UNIQUE` ON `QSO_STATUS` (`NAME` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `MODE`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `MODE` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `MODE` (
   `ID` INT NOT NULL AUTO_INCREMENT ,
   `MODE` VARCHAR(4) NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB;
 
+SHOW WARNINGS;
 CREATE UNIQUE INDEX `MODE_UNIQUE` ON `MODE` (`MODE` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `QSO`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `QSO` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `QSO` (
   `ID` INT NOT NULL DEFAULT NULL AUTO_INCREMENT ,
   `QSO_DATE` DATETIME NOT NULL ,
@@ -300,44 +354,53 @@ CREATE  TABLE IF NOT EXISTS `QSO` (
 ENGINE = InnoDB
 COMMENT = 'Holds normalized QSO records.  \n\nUltimately will be used to ' /* comment truncated */;
 
-CREATE INDEX `FK_QSO_LOG` ON `QSO` (`ID` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_QSO_LOG_idx` ON `QSO` (`ID` ASC) ;
 
-CREATE INDEX `FK_QSO_QSO_STATUS` ON `QSO` (`QSO_STATUS` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_QSO_QSO_STATUS_idx` ON `QSO` (`QSO_STATUS` ASC) ;
 
-CREATE INDEX `FK_QSO_QTH_RCVD_MULTIPLIER` ON `QSO` (`QTH_RECEIVED` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_QSO_QTH_RCVD_MULTIPLIER_idx` ON `QSO` (`QTH_RECEIVED` ASC) ;
 
-CREATE INDEX `FK_QSO_QTH_SENT_MULTIPLIER` ON `QSO` (`QTH_SENT` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_QSO_QTH_SENT_MULTIPLIER_idx` ON `QSO` (`QTH_SENT` ASC) ;
 
+SHOW WARNINGS;
 CREATE INDEX `CALLSIGN_SENT` ON `QSO` (`CALLSIGN_SENT` ASC) ;
 
+SHOW WARNINGS;
 CREATE INDEX `CALLSIGN_RECEIVED` ON `QSO` (`CALLSIGN_RECEIVED` ASC) ;
 
-CREATE UNIQUE INDEX `ID_UNIQUE` ON `QSO` (`ID` ASC) ;
-
+SHOW WARNINGS;
 CREATE INDEX `FK_QSO_MODE_idx` ON `QSO` (`MODE` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `SCORE_TYPE`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `SCORE_TYPE` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `SCORE_TYPE` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(45) NULL DEFAULT NULL ,
   `VALUE` VARCHAR(45) NULL DEFAULT NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB
 COMMENT = 'Not sure what this is for...\n\nAsk W1SRD\n';
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `SCORE`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `SCORE` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `SCORE` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `LOG_ID` INT NOT NULL ,
   `TYPE_ID` INT NOT NULL ,
   `VALUE` VARCHAR(45) NULL DEFAULT NULL ,
@@ -355,32 +418,38 @@ CREATE  TABLE IF NOT EXISTS `SCORE` (
 ENGINE = InnoDB
 COMMENT = 'Holds the final calculared score for the corresponding conte' /* comment truncated */;
 
-CREATE INDEX `FK_SCORE_LOG` ON `SCORE` (`ID` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_SCORE_LOG_idx` ON `SCORE` (`ID` ASC) ;
 
-CREATE INDEX `FK_SCORE_TYPE` ON `SCORE` (`TYPE_ID` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_SCORE_TYPE_idx` ON `SCORE` (`TYPE_ID` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `AWARD_TYPE`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `AWARD_TYPE` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `AWARD_TYPE` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `NAME` VARCHAR(45) NULL DEFAULT NULL ,
   `VALUE` VARCHAR(45) NULL DEFAULT NULL ,
   PRIMARY KEY (`ID`) )
 ENGINE = InnoDB
 COMMENT = 'Determines the award type.  Possible options are:\n\nPLAQUE\nWI';
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `AWARD`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `AWARD` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `AWARD` (
-  `ID` INT NOT NULL ,
+  `ID` INT NOT NULL AUTO_INCREMENT ,
   `LOG_ID` INT NOT NULL ,
   `TYPE_ID` INT NOT NULL ,
   `NAME` VARCHAR(64) NULL DEFAULT NULL ,
@@ -398,16 +467,20 @@ CREATE  TABLE IF NOT EXISTS `AWARD` (
 ENGINE = InnoDB
 COMMENT = 'Ties an award type to a contest entrant.';
 
-CREATE INDEX `FK_AWARD_LOG` ON `AWARD` (`LOG_ID` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_AWARD_LOG_idx` ON `AWARD` (`LOG_ID` ASC) ;
 
-CREATE INDEX `FK_AWARD_TYPE` ON `AWARD` (`TYPE_ID` ASC) ;
+SHOW WARNINGS;
+CREATE INDEX `FK_AWARD_TYPE_idx` ON `AWARD` (`TYPE_ID` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `MULTIPLIER_ALIAS`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `MULTIPLIER_ALIAS` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `MULTIPLIER_ALIAS` (
   `ID` INT NOT NULL AUTO_INCREMENT ,
   `MULTIPLIER_NAME` VARCHAR(32) NOT NULL ,
@@ -422,14 +495,17 @@ CREATE  TABLE IF NOT EXISTS `MULTIPLIER_ALIAS` (
 ENGINE = InnoDB
 COMMENT = 'Used for nformalization of multiplier names.  Containes an a' /* comment truncated */;
 
+SHOW WARNINGS;
 CREATE INDEX `FK_MULTIPLIER_ID_idx` ON `MULTIPLIER_ALIAS` (`MULTIPLIER_ID` ASC) ;
 
+SHOW WARNINGS;
 
 -- -----------------------------------------------------
 -- Table `CLUB_ALIAS`
 -- -----------------------------------------------------
 DROP TABLE IF EXISTS `CLUB_ALIAS` ;
 
+SHOW WARNINGS;
 CREATE  TABLE IF NOT EXISTS `CLUB_ALIAS` (
   `ID` INT NOT NULL AUTO_INCREMENT ,
   `ALIAS` VARCHAR(255) NOT NULL ,
@@ -443,10 +519,10 @@ CREATE  TABLE IF NOT EXISTS `CLUB_ALIAS` (
 ENGINE = InnoDB
 COMMENT = 'Contains aliases we have seen for specific club names.\n\nUsed' /* comment truncated */;
 
-CREATE UNIQUE INDEX `ID_UNIQUE` ON `CLUB_ALIAS` (`ID` ASC) ;
-
+SHOW WARNINGS;
 CREATE INDEX `FK_CLUB_ID_idx` ON `CLUB_ALIAS` (`CLUB_ID` ASC) ;
 
+SHOW WARNINGS;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
@@ -496,6 +572,16 @@ INSERT INTO `TRANSMITTER_CATEGORY` (`ID`, `NAME`) VALUES (NULL, 'ONE');
 INSERT INTO `TRANSMITTER_CATEGORY` (`ID`, `NAME`) VALUES (NULL, 'TWO');
 INSERT INTO `TRANSMITTER_CATEGORY` (`ID`, `NAME`) VALUES (NULL, 'MULTI');
 INSERT INTO `TRANSMITTER_CATEGORY` (`ID`, `NAME`) VALUES (NULL, 'UNLIMITED');
+
+COMMIT;
+
+-- -----------------------------------------------------
+-- Data for table `CLUB_LOCATION`
+-- -----------------------------------------------------
+START TRANSACTION;
+USE `CQP-ACE`;
+INSERT INTO `CLUB_LOCATION` (`ID`, `LOCATION`) VALUES (NULL, 'CA');
+INSERT INTO `CLUB_LOCATION` (`ID`, `LOCATION`) VALUES (NULL, 'OCA');
 
 COMMIT;
 
