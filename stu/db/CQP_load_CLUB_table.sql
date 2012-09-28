@@ -66,7 +66,6 @@ insert into CLUB (NAME, LOCATION) values ('WIRELESS ASSN OF SOUTH HILLS','OCA');
 insert into CLUB (NAME, LOCATION) values ('WVDXC','OCA');
 insert into CLUB (NAME, LOCATION) values ('HUDSON VALLEY CONTESTERS AND DXERS','OCA');
 insert into CLUB (NAME, LOCATION) values ('CENTRAL OR DX CLUB','OCA');
-insert into CLUB (NAME, LOCATION) values ('NORTHERN CALIFORNIA CONTEST CLUB','CA');
 insert into CLUB (NAME, LOCATION) values ('CJDXA','OCA');
 insert into CLUB (NAME, LOCATION) values ('RUSSIAN CONTEST CLUB','OCA');
 insert into CLUB (NAME, LOCATION) values ('SOARA','CA');
