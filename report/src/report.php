@@ -175,7 +175,7 @@ class NCCCReportPDF extends TCPDF {
   
 }
 
-$pdf = new NCCCReportPDF("2012 California QSO Party (CQP) \xe2\x80\x93  US Draft Results (Non-CA)");
+$pdf = new NCCCReportPDF("9999 California QSO Party (CQP) \xe2\x80\x93  US Draft Results (Non-CA)");
 
 $cats = array();
 $cat = new EntryCategory("Alabama");
