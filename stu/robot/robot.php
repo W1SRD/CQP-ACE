@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/local/bin/php
 <?php
 
 // Mail robot for CQP
@@ -33,6 +33,7 @@
 require_once('email.inc.php');
 require_once('robot.inc.php');
 require_once('errors.inc.php');
+require_once('cqpace.inc.php');
 
 // Global data
 
@@ -42,7 +43,8 @@ $DONE = 'Processed';		// Robot processed messages
 $JUNK = "SPAMWonderfulSPAM";    // Stuff we think might be SPAM
 
 // Path names for data storage
-$CABLOGS = '/mnt/ec2-user/CQPlogs';
+// $CABLOGS = '/mnt/ec2-user/CQPlogs';
+$CABLOGS = ".";
 $OTHER = '.';
 
 // Defines
@@ -158,18 +160,33 @@ while (1) {
       $fname = MakeLogName($call);
 
       if (!file_put_contents("$CABLOGS/$fname", $log)) {
-        pd("  - Error writing $CABLOGS/$FNAME - aborting!");
+        pd("  - Error writing $CABLOGS/$fname - aborting!");
         exit(1);
       }
 
       pd("    From: " . $msg['FROM']);
       pd("      Call: $call      File: $fname");
 
-      // Generate a response back to the submitter
-      if (!SendResponse($msg, $fname, $log)) {
+      // Ok - the file is a Cabrillo log and has been written
+      // to disk.  The only thing left that could be wrong
+      // is that despite claiming to be a CQP log, the Cabrillo
+      // doesn't have enough fileds in the QSO record to be
+      // for CQP...  we are almost done.
+
+      $CQPF = CabCrack($msg['FROM'], $fname, $log);
+      if (!$CQPF) {
         $needHuman = NOTCQPCONTEST;
         break;
       }
+
+      // Write the record to the database for this Carillo
+      // file.  In theory, the only reason for a failure here
+      // would be caused by having a record for a club name
+      // that we have never seen before (or a novel way of
+      // identifiying an existing club)
+
+      $dbres = CQPACEUpdateDB($CQPF, "$CABLOGS/$fname");
+      SendResponse($msg, $CQPF, $fname, $dbres); 
 
       // Move the message to the DONE folder
       erMoveMessage($m, $DONE);

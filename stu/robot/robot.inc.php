@@ -2,6 +2,7 @@
 
 
 require_once('xhdr.inc.php');
+require_once('xhdrsupport.inc.php');
 require_once('errors.inc.php');
 
 // Support functions called from robot.php
@@ -136,6 +137,35 @@ function CabBodyCheck($msg) {
 }
 
 
+// CabGetSoapbox
+//
+// Returns the soapbox if one exists as a multiline string
+
+function CabGetSoapbox($log) {
+  $log = preg_replace('/\r/', '', $log);
+
+  if (preg_match_all('/^SOAPBOX.*$/m', $log, $m)) {
+    return (implode("\n", $m[0]));
+  } else {
+    return('');
+  }
+}
+
+// CabGetHeaders($log)
+//
+// Return all CAB headers as a multiline string
+
+function CabGetHeaders($log) {
+  $log = preg_replace('/\r/', '', $log);
+  
+  if (preg_match("/^START-OF-LOG.*?$\n(.*?)\n^QSO:.*$/ms", $log, $m)) {
+    return ($m[1]);
+  } else {
+    return('');  // This should NEVER happen!
+  }
+}
+
+
 //
 // CabGetCall($log)
 //
@@ -174,15 +204,14 @@ function CabGetQcount($log) {
 }
 
 
-// 
-// SendResponse($msg, $fname, $log)
 //
-// The $log in $msg has been found and written to $fname
+// CabCrack($log)
 //
-// Compose a response back to the user and send it...
-//
+// Returns an associative array
+// of all the data required to populate a CQP-ACE log table
+// database row...
 
-function SendResponse($msg, $fname, $log) {
+function CabCrack($email, $fname, $log) {
   // Set up for calls to _xhdr_getl by...
   setup_xhdr_getl($log);
 
@@ -194,7 +223,27 @@ function SendResponse($msg, $fname, $log) {
     return (FALSE);
   }
 
-  $CQPF['NQSO'] = CabgetQcount($log);
+  $CQPF[':number_qso_recs'] = CabgetQcount($log);
+  $CQPF[':soapbox'] = CabGetSoapbox($log);
+  $CQPF[':cabrillo_header'] = CabGetHeaders($log);
+  $CQPF[':log_filename'] = $fname;
+  $CQPF[':submission_date'] = gmdate("Y-m-d");
+  $CQPF[':last_updated'] = gmdate("Y-m-d H:i:s");
+  $CQPF[':email_address'] = trim($email);
+
+  return $CQPF;
+}
+
+
+// 
+// SendResponse($msg, $fname, $log)
+//
+// The $log in $msg has been found and written to $fname
+//
+// Compose a response back to the user and send it...
+//
+
+function SendResponse($msg, $CQPF, $fname, $dbres) {
 
   // Format the reply message...
   $b =  "---------------------------------------------------------------------------\n";
@@ -203,56 +252,71 @@ function SendResponse($msg, $fname, $log) {
   $b .= "## the CQP Chair at cqp-chair@cqp.org                                    ##\n";
   $b .= "---------------------------------------------------------------------------\n";
   $b .= "\n\n";
-  $b .= "Thank you for submitting your log for CQP-2012!  We have received your\n";
-  $b .= "log and determined the information below.  You may re-submit your log\n";
-  $b .= "to correct any missing or incorrect information.\n";
+ 
+  switch ($dbres) {
+    case 'create':
+      $b .= "Thank you for submitting your log for CQP-2012!  We have received your\n";
+      $b .= "log and determined the information below.  You may re-submit your log\n";
+      $b .= "to correct any missing or incorrect information.\n";
+      break;
+
+    case 'update':
+      $b .= "Thank you for UPDATING your log for CQP-2012.  The robot has processed\n";
+      $b .= "the log and determined the information below.  You may re-submit your log\n";
+      $b .= "again if there is still something not right BUT WE STRONGLY SUGGEST YOU\n";
+      $b .= "CHECK OUT THE FAQ link below if you are having problems.\n";
+      break;
+
+    default:
+      $b .= "Thank you for submitting your log for CQP-2012.  The robot has processed\n";
+      $b .= "the log and determined the information below.  You may re-submit your log\n";
+      $b .= "to correct any missing or incorrect information.\n";
+      $b .= "\n";
+      $b .= "PLEASE NOTE:  You WILL NOT see your log appear in the list of received logs\n";
+      $b .= "but DON'T PANIC!  We weren't able to update our list of received logs with\n";
+      $b .= "your entry.  You can check out the FAQ below for the most likely reason but\n";
+      $b .= "my human masters will take care of this manually.  Please be patient... they\n";
+      $b .= "aren't as fast at this as I am - even if I do need their help occasionally!\n";
+      break;
+  }
+
   $b .= "\n";
   $b .= "Please read http://www.cqp.org/robo-dean-faq.html if you have any\n";
   $b .= "questions.\n";
   $b .= "\n";
-  $b .= "Callsign           : " . $CQPF['CALL'] . "\n";
-  $b .= "QTH                : " . $CQPF['QTH'] . "\n";
-  $b .= "Category           : ";
-  
-  switch ($CQPF['CATEGORY']) {
-    case 'S' :  $b .= "SINGLE-OP\n"; break;
-    case 'MM':  $b .= "MULTI-MULTI\n"; break;
-    case 'MS':  $b .= "MULTI-SINGLE\n"; break;
-  }
-
-  $b .= "Power              : ";
-
-  switch ($CQPF['POWER']) {
-    case 'L':  $b .= "LOW\n"; break;
-    case 'H':  $b .= "HIGH\n"; break;
-    case 'Q':  $b .= "QRP\n"; break;
-  }
-
+  $b .= "Callsign           : " . $CQPF[':callsign'] . "\n";
+  $b .= "QTH                : " . $CQPF[':station_location'] . "\n";
+  $b .= "Category           : " . $CQPF[':operator_category'] . "\n";
+  $b .= "Power              : " . $CQPF[':power_category'] . "\n";
   $b .= "Assisted           : " . ($CQPF['ASSISTED'] == 'Y' ? "Yes\n" : "No\n");
-  $b .= "Club               : " . ($CQPF['CLUB'] ? ($CQPF['CLUB'] . "\n") : "None\n");
-  $b .= "Number of QSOs     : " . $CQPF['NQSO'] . "\n";
+  $b .= "Club               : " . $CQPF[':club'] . "\n";
+  $b .= "Number of QSOs     : " . $CQPF[':number_qso_recs'] . "\n";
   $b .= "\n";
   $b .= "CQP OVERLAY CATEGORIES\n\n";
-  $b .= "Youth              : " . ($CQPF['YOUTH'] == 'Y' ? "Yes\n" : "No\n");
-  $b .= "YL                 : " . ($CQPF['YL'] == 'Y' ? "Yes\n" : "No\n");
-  $b .= "New Contester      : " . ($CQPF['NEWC'] == 'Y' ? "Yes\n" : "No\n");
-  $b .= "School             : " . ($CQPF['SCHOOL'] == 'Y' ? "Yes\n" : "No\n");
-  $b .= "County Expedition  : " . ($CQPF['CEXP'] == 'Y' ? "Yes\n" : "No\n");
-  $b .= "Mobile             : " . ($CQPF['MOBILE'] == 'Y' ? "Yes\n" : "No\n");
+  $b .= "Youth              : " . ($CQPF[':overlay_youth'] ? "Yes\n" : "No\n");
+  $b .= "YL                 : " . ($CQPF[':overlay_yl'] ? "Yes\n" : "No\n");
+  $b .= "New Contester      : " . ($CQPF[':overlay_new_contester'] ? "Yes\n" : "No\n");
+  $b .= "School             : " . ($CQPF[':station_category'] == 'SCHOOL' ? "Yes\n" : "No\n");
+  $b .= "County Expedition  : " . ($CQPF[':station_category'] == 'CCE' ? "Yes\n" : "No\n");
+  $b .= "Mobile             : " . ($CQPF[':station_category'] == 'MOBILE' ? "Yes\n" : "No\n");
 
   $b .= "\n";
-  $b .= "NOTE\n\n";
-  $b .= "If you submitted a log in the MOBILE overlay category, the QTH field\n";
-  $b .= "above reflects only the first CA county or State within which you\n";
-  $b .= "operated.\n";
-  $b .= "\n";
+
+  if ($CQPF[':station_category'] == 'MOBILE') {
+    $b .= "NOTE\n\n";
+    $b .= "From your log, we have determined you operated in the MOBILE overlay\n";
+    $b .= "category (THANK YOU - WE NEED MORE FOLKS LIKE YOU!!!)...  the QTH field\n";
+    $b .= "above reflects only the first CA county or State within which you\n";
+    $b .= "operated.  No worries, any others in your log are already captured\n";
+    $b .= "\n";
+  }
+
   $b .= "Thanks again and 73!\n";
   $b .= "The NCCC CQP Team\n";
 
   $subject = "[$fname] " . $msg['SUBJECT'];
 
   erSendMessage($msg['TO'], $msg['FROM'], $subject, $b);
-  return (TRUE);
 }
 
 
@@ -298,8 +362,8 @@ function NonComprendez($msg, $needHuman) {
       break;
 
     case CABRILLOERROR:
-      $b .= "We found a Cabrillo log but we had a problem checking it.  This\n";
-      $b .= "because this isn't a log for CQP or because my human boss didn't\n";
+      $b .= "We found a Cabrillo log but we had a problem checking it.  This is\n";
+      $b .= "because either this isn't a log for CQP or because my human boss didn't\n";
       $b .= "get his coding right for all cases - he's only human after all.\n";
       break;
 
@@ -390,42 +454,6 @@ function CabInsertWFInfo($log, $wf) {
   return($match[1] . $nfs_as_s . $match[2]);
 }
 
-
-// Support for XHDRCrack
-
-$LINES = array();
-$LN = 0;
-$LNCNT = 0;
-$LOG = '';
-
-
-function setup_xhdr_getl($log) {
-  global $LOG, $LINES, $LN, $LNCNT;
-
-  // Copy the whole log for later retrieval
-  $LOG = $log;
-
-  // Split log into lines with no CR
-  $lines = preg_replace("/\r/", '', $log);
-  $LNCNT = preg_match_all("/(.*\n)/m", $lines, $LINES);
-  $LN = 0;
-}
-
-function _xhdr_getl() {
-  global $LINES, $LN, $LNCNT;
-
-  if ($LN >= $LNCNT) {
-    pd("    Premature EOF in _xhdr_get!");
-    exit(1);
-  }
-
-  return($LINES[0][$LN++]);
-}
-
-function _xhdr_getlog() {
-  global $LOG;
-  return $LOG;
-}
 
 
 ?>

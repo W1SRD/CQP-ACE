@@ -10,9 +10,13 @@
 // Debug and error information is written to stderr
 //
 
-// ASSUMES that the caller provides a routine _xhdr_getl that
-// will return the log to be processed line by line.
-
+// ASSUMES that the caller provides two routines:
+// _xhdr_getl() 
+// Returns the log to be processed line by line.
+// 
+// _xhdr_getlog()
+// Returns the whole log as a multi-line string
+// 
 // Global data
 
 $_xhdr_CQPF = '';
@@ -55,89 +59,100 @@ function _xhdr_parseCatToken($t) {
     case 'MULTI-ONE':
     case 'MULTI-SINGLE-OP':
     case 'MS':
-      $_xhdr_CQPF['CATEGORY'] = 'MS';
+      $_xhdr_CQPF[':operator_category'] = 'MULTI-SINGLE';
       break;
 
     case 'MULTI-MULTI':
-    case 'TWO':
-      $_xhdr_CQPF['CATEGORY'] = 'MM';
+      $_xhdr_CQPF[':operator_category'] = 'MULTI-MULTI';
       break;
+
+    case 'ONE':
+      $_xhdr_CQPF[':transmitter_category'] = 'ONE';
+      break;
+
+    case 'TWO':
+      $_xhdr_CQPF['transmitter_category'] = 'TWO';
+      break;
+
 
     case 'SINGLE-OP':
     case 'SINGLE-OPERATOR':
     case 'SINGLE-':
     case 'SO':
-      $_xhdr_CQPF['CATEGORY'] = 'S';
+      $_xhdr_CQPF[':operator_category'] = 'SINGLE-OP';
       break;
 
     case 'SINGLE-OP-ASSISTED':
       $_xhdr_CQPF['ASSISTED'] = 'Y';
-      $_xhdr_CQPF['CATEGORY'] = 'S';
+      $_xhdr_CQPF[':operator_category'] = 'MULTI-SINGLE';
       break;
 
     case 'SO-LP':
     case '(SO-LP)':
     case 'SINGLE-OPERATOR-LOW':
-      $_xhdr_CQPF['CATEGORY'] = 'S';
-      $_xhdr_CQPF['POWER'] = 'L';
+      $_xhdr_CQPF[':operator_category'] = 'SINGLE-OP';
+      $_xhdr_CQPF[':power_category'] = 'LOW';
       break;
 
     case 'SO-HP':
     case 'SINGLE-OP-HIGH-MIXED':
-      $_xhdr_CQPF['CATEGORY'] = 'S';
-      $_xhdr_CQPF['POWER'] = 'H';
+      $_xhdr_CQPF[':operator_category'] = 'SINGLE-OP';
+      $_xhdr_CQPF[':power_category'] = 'HIGH';
       break;
  
     case 'MS-HP':
     case '(MS-HP)':
-      $_xhdr_CQPF['CATEGORY'] = 'MS';
-      $_xhdr_CQPF['POWER'] = 'H';
+      $_xhdr_CQPF[':operator_category'] = 'MULTI-SINGLE';
+      $_xhdr_CQPF[':power_category'] = 'HIGH';
       break;
 
     case 'MS-LP':
-      $_xhdr_CQPF['CATEGORY'] = 'MS';
-      $_xhdr_CQPF['POWER'] = 'L';
+      $_xhdr_CQPF[':operator_category'] = 'MULTI-SINGLE';
+      $_xhdr_CQPF[':power_category'] = 'LOW';
       break;
 
     case 'HIGH':
     case 'HP':
-      $_xhdr_CQPF['POWER'] = 'H';
+      $_xhdr_CQPF[':power_category'] = 'HIGH';
       break;
 
     case 'LOW':
     case 'LO':
     case 'LP':
-      $_xhdr_CQPF['POWER'] = 'L';
+      $_xhdr_CQPF[':power_category'] = 'LOW';
       break;
 
     case 'SO-QRP':
-      $_xhdr_CQPF['CATEGORY'] = 'S';
-      $_xhdr_CQPF['POWER'] = 'Q';
+      $_xhdr_CQPF[':power_category'] = 'SINGLE-OP';
+      $_xhdr_CQPF[':power_category'] = 'QRP';
       break;
 
     case 'QRP':
-      $_xhdr_CQPF['POWER'] = 'Q';
+      $_xhdr_CQPF[':power_category'] = 'QRP';
       break;
 
     case 'COUNTY-EXPEDITION':
     case 'EXPEDITION':
+      $_xhdr_CQPF[':station_category'] = 'CCE';
       $_xhdr_CQPF['CEXP'] = 'Y';
       break;
 
     case 'SCHOOL':
     case 'SCHOOL-CLUB':
+      $_xhdr_CQPF[':station_category'] = 'SCHOOL';
       $_xhdr_CQPF['SCHOOL'] = 'Y';
       break;
  
     case 'MOBILE':
     case 'ROVER':
+      $_xhdr_CQPF[':station_category'] = 'MOBILE';
       $_xhdr_CQPF['MOBILE'] = 'Y';
       break;
 
     case 'CHECKLOG':
     case 'CHECK':
     case 'CHECK-LOG':
-      $_xhdr_CQPF['CATEGORY'] = 'C';
+      $_xhdr_CQPF[':operator_category'] = 'CHECK';
       break;
 
     case 'NONASSISTED':
@@ -165,21 +180,21 @@ function _xhdr_cabSoapbox($l) {
   $l = strtoupper($l);
   
   if (preg_match("/[\s|-|(]YL[\s|-|$]/", $l)) {
-    $_xhdr_CQPF['YL'] = 'Y';
+    $_xhdr_CQPF[':overlay_yl'] = TRUE;
   }
 
   if (preg_match("/MOBILE/", $l)) {
-    $_xhdr_CQPF['MOBILE'] = 'Y';
+    $_xhdr_CQPF[':station_category'] = 'MOBILE';
   }
 
   if (preg_match("/SCHOOL/", $l)) {
-    $_xhdr_CQPF['SCHOOL'] = 'Y';
+    $_xhdr_CQPF[':station_category'] = 'SCHOOL';
   }
   if (preg_match("/YOUTH/", $l)) {
-    $_xhdr_CQPF['YOUTH'] = 'Y';
+    $_xhdr_CQPF[':overlay_youth'] = TRUE;
   }
   if (preg_match("/NEW[\s|-]CONTESTER/", $l)) {
-    $_xhdr_CQPF['NEWC'] = 'Y';
+    $_xhdr_CQPF[':overlay_new_contester'] = TRUE;
   }
 }
 
@@ -202,27 +217,27 @@ function _xhdr_CQPspecial($l) {
 
   switch(strtoupper($m[1])) {
     case 'YOUTH':
-      $_xhdr_CQPF['YOUTH'] = 'Y';
+      $_xhdr_CQPF[':overlay_youth'] = TRUE;;
       break;
 
     case 'COUNTY EXPEDITION':
-      $_xhdr_CQPF['CEXP'] = 'Y';
+      $_xhdr_CQPF[':station_category'] = 'MOBILE';
       break;
 
     case 'YL':
-      $_xhdr_CQPF['YL'] = 'Y';
+      $_xhdr_CQPF[':overlay_yl'] = TRUE;
       break;
 
     case 'SCHOOL':
-      $_xhdr_CQPF['SCHOOL'] = 'Y';
+      $_xhdr_CQPF[':station_category'] = TRUE;
       break;
 
     case 'MOBILE':
-      $_xhdr_CQPF['MOBILE'] = 'Y';
+      $_xhdr_CQPF[':station_category'] = 'MOBILE';
       break;
 
     case 'NEW CONTESTER':
-      $_xhdr_CQPF['NEWC'] = 'Y';
+      $_xhdr_CQPF[':overlay_new_contester'] = TRUE;
       break;
 
     default:
@@ -242,20 +257,28 @@ function _xhdr_init() {
   global $_xhdr_CQPF;
 
   $_xhdr_CQPF = array(
-    'CALL'            => '',      // Callsign for entry
-    'QTH'             => '',      // Location
-    'CATEGORY'        => 'S', 	// Contest category (S|MS|MM)
-    'POWER'           => 'H',  	// Power level (Q|L|H)
-    'ASSISTED'        => 'N',	// Assisted or not
-    'CLUB'            => '',	// Club for club competition - may be blank
-    'YOUTH'           => 'N',	// Overlay YOUTH (Y|N|?)
-    'YL'              => 'N',	// Overlay YL (Y|N|?)
-    'SCHOOL'          => 'N',	// Overlay SCHOOL (Y|N)
-    'NEWC'            => 'N',	// Overlay NEW CONTESTER (Y|N|?)
-    'CEXP'            => 'N',	// Overlay COUNTY EXPEDITION (Y|N|?)
-    'MOBILE'          => 'N',	// Overlay MOBILE (Y|N|?)
-    'C_SCORE'         => 0, 	// Claimed score
-    'LOGNAME'         => '',      // Name of processed log file stripped of any path
+    ':callsign'               => '', 		// Callsign for entry
+    ':email_address'           => '', 		// Email address
+    ':station_location'       => 'FIXED',    	// Location
+    ':operator_category'      => 'SINGLE-OP', 	// Contest category (S|MS|MM)
+    ':power_category'         => 'HIGH', 	// Power level (Q|L|H)
+    ':station_category'       => 'FIXED',	// Station Category
+    ':transmitter_category'   => 'ONE', 	// Transmitter cateogry (ONE|TWO)
+    ':club'                   => 'NONE GIVEN',	// Club for club competition - may be blank
+    ':submission_date'        => '',   		// SQL formatted date
+    ':overlay_yl'             => FALSE,		// Overlay YL (Y|N|?)
+    ':overlay_youth'          => FALSE,		// Overlay YOUTH (Y|N|?)
+    ':overlay_new_contester'  => FALSE,		// Overlay NEW CONTESTER (Y|N|?)
+    ':claimed_score'          => 0, 		// Claimed score
+    ':log_filename'           => '',    	// Name of processed log file stripped of any path
+    ':soapbox'		      => '',    	// Soapbox comments - multiline with SOAPBOX: headers
+    ':cabrillo_header'        => '',    	// Cabrillo headers as multiline string	
+    ':qso_recs_present'       => 0,     	// True if QSO records loaded in the QSO table
+    ':last_updated'           => '',    	// SQL formatted time stamp
+    'ASSISTED'                => 'N',   	// Assisted or not
+    'CEXP'                    => 'N',   	// Overlay COUNTY EXPEDITION (Y|N|?)
+    'MOBILE'                  => 'N',   	// Overlay MOBILE (Y|N|?)
+    'SCHOOL'                  => 'N',   	// Overlay SCHOOL (Y|N)
   );
 }
 
@@ -279,7 +302,7 @@ function XHDRcrack() {
   // Validate this is a Cabrillo file - version 2 or 3 - doesn't matter
   $l = _xhdr_getl();
   if (!preg_match("/^START-OF-LOG: /", $l)) {
-    error_log("$argv[1]:  Not a Cabrillo file\n");
+    error_log("  Not a Cabrillo file\n");
     return (array());
   }
   
@@ -292,17 +315,21 @@ function XHDRcrack() {
       _xhdr_cabCategory($l);
     } elseif (preg_match("/^SOAPBOX:/", $l)) {
       _xhdr_cabSoapbox($l);
-    } elseif (preg_match("/^CLUB:/", $l)) {
+    } elseif (preg_match("/^CLUB.*?:/", $l)) {
       // Club record...
-      $l = preg_replace("/^CLUB: /", '', $l);
+      $l = preg_replace("/^CLUB.*?: /", '', $l);
       $l = preg_replace("/\s{2,}/", '', $l);
-      $l = preg_replace("/,/", '-', $l);
-      $_xhdr_CQPF['CLUB'] = trim($l);
+      $l = preg_replace("/[,']/", '-', $l);
+    
+      // Check for a NULL club record
+      $l = (preg_replace('/ /', '', $l) == '') ? "NONE GIVEN" : $l;
+
+      $_xhdr_CQPF[':club'] = trim(strtoupper(trim($l)));
     } elseif (preg_match("/CLAIMED-SCORE:/", $l)) {
       $l = preg_replace("/^CLAIMED-SCORE: /", '', $l);
       $l = preg_replace("/\s{2,}/", '', $l);
       $l = trim($l);
-      $_xhdr_CQPF['C_SCORE'] = $l;
+      $_xhdr_CQPF[':claimed_score'] = $l;
     } elseif (preg_match("/^X-CQP-/", $l)) {
       // CQP special header
       _xhdr_CQPspecial($l);
@@ -323,7 +350,7 @@ function XHDRcrack() {
   if (preg_match("/(^QSO:.*?)^[QSO|END].*$/ms", $log, $m)) {
     // We arrive here with the full QSO record in $m[1] 
     // possibly as a mutliline string...
-    $l = preg_replace("/\r\n/ms", ' ', $m[1]);
+    $l = preg_replace("/[\r\n]/ms", ' ', $m[1]);
     // Replace any tab with spaces
     $l = preg_replace("/\t/", ' ', $l);
     // Make sure there is at least one space after the QSO:...
@@ -338,8 +365,8 @@ function XHDRcrack() {
       error_log("    INVALID number of fields in QSO record #1 - should be 11\n");
       return(array());
     }
-    $_xhdr_CQPF['CALL'] = trim($f[5]);
-    $_xhdr_CQPF['QTH'] = trim($f[7]);
+    $_xhdr_CQPF[':callsign'] = preg_replace("/ /", '', trim($f[5]));
+    $_xhdr_CQPF[':station_location'] = preg_replace("/ /", '',  trim($f[7]));
   }
   
   // If we get this far, we should have all the information we can extract

@@ -11,22 +11,9 @@
 //
 
 
-require_once('xhdr.inc.php');
+require_once('robot.inc.php');
+require_once('log.inc.php');
 
-// Utility functions
-
-function _xhdr_getl() {
-  global $argv, $LOG;
-
-  $l = fgets($LOG);
-  if (!$l) {
-    // We don't expect premature EOF - moan and exit
-    error_log("$argv[1]:  Premature EOF\n");
-    exit(1);
-  }
-  $l = preg_replace("/\r/", ' ', $l);
-  return($l);
-}
 
 // Processing functions
 
@@ -36,6 +23,9 @@ if ($narg != 2) {
   exit(1);
 }
 
+$USER = getenv('CQPUSER');
+$PASS = getenv('CQPPASS');
+
 
 // Open the log file
 $LOG = fopen($argv[1], "r");
@@ -44,23 +34,31 @@ if (!$LOG) {
   exit(1);
 }
 
-$CQPF = XHDRcrack();
+$CQPF = CabCrack("stu@ridgelift.com", $argv[1], _xhdr_getlog());
 
 if (!$CQPF) {
   error_log("Failed processing Cabrillo log\n");
   exit(1);
 }
 
-$CQPF['LOGNAME'] = preg_replace("/.*\//", '', $argv[1]);
-
 
 // If we get this far, we should have all the information we can extract
 // so create a record for loading the DB.
 
-print(implode(',',$CQPF) . "\n");
-print_r($CQPF);
-exit(0);
+unset($CQPF['ASSISTED']);
+unset($CQPF['CEXP']);
+unset($CQPF['MOBILE']);
+unset($CQPF['SCHOOL']);
 
-
+try {
+  $logt = new CQPACE_LOG_TABLE($USER, $PASS);
+  $logt->log_row_create($CQPF);
+  print("Inserted : " . $CQPF[':callsign'] . "\n");
+} catch (Exception $e) {
+  print ("Error on " . $CQPF[':callsign'] . "\n");
+  print_r($CQPF);
+  print "\n";
+  print $e->getMessage() . "\n\n";
+}
 
 ?>
