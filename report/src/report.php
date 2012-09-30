@@ -11,6 +11,7 @@ require_once('../3rdparty/tcpdf/tcpdf.php');
 require_once('category.php');
 
 class NCCCReportPDF extends TCPDF {
+
   protected $borders = 0;
   protected $header_height = 22;
   protected $report_title = '';
@@ -39,6 +40,20 @@ class NCCCReportPDF extends TCPDF {
     if ($this->GetY() >= $bottom) {
       $this->AddPage();
     }
+  }
+
+  private function strformat($ival) {
+    $separator = ",";
+    // $separator = "\xe2\x80\x89";
+    $str = strval($ival);
+    $result = "";
+    for ($count = 0,$i = strlen($str)-1; $i >= 0; $i--,$count++) {
+      if (($count > 0) and (($count % 3) == 0)) {
+	$result = $separator . $result;
+      }
+      $result = $str[$i] . $result;
+    }
+    return $result;
   }
 
   private function CategoryHeader($category) {
@@ -109,18 +124,18 @@ class NCCCReportPDF extends TCPDF {
       $this->CheckNewRecord($entry);
       $this->Cell($this->columnwidths[0], $this->baseline_skip, $sign, $this->borders, 0,
 		  'L', false, "", 0, false);
-      $this->Cell($this->columnwidths[1], $this->baseline_skip, strval($entry->GetNumCW()), 
+      $this->Cell($this->columnwidths[1], $this->baseline_skip, $this->strformat($entry->GetNumCW()), 
 		  $this->borders, 0, 'R', false, "", 0, false);
-      $this->Cell($this->columnwidths[2], $this->baseline_skip, strval($entry->GetNumPH()), 
+      $this->Cell($this->columnwidths[2], $this->baseline_skip, $this->strformat($entry->GetNumPH()), 
 		  $this->borders, 0, 'R', false, "", 0, false);
       $this->Cell($this->columnwidths[3], $this->baseline_skip, 
-		  strval($entry->GetNumCW()+$entry->GetNumPH()), 
+		  $this->strformat($entry->GetNumCW()+$entry->GetNumPH()), 
 		  $this->borders, 0, 'R', false, "", 0, false);
       $this->Cell($this->columnwidths[4], $this->baseline_skip, 
-		  strval($entry->GetNumMult()), $this->borders, 0,
+		  $this->strformat($entry->GetNumMult()), $this->borders, 0,
 		  'R', false, "", 0, false);
       $this->Cell($this->columnwidths[5], $this->baseline_skip, 
-		  strval($entry->GetTotalScore()), $this->borders, 0,
+		  $this->strformat($entry->GetTotalScore()), $this->borders, 0,
 		  'R', false, "", 0, false);
       $this->Cell($this->columnwidths[6], $this->baseline_skip, 
 		  $entry->GetEntryClass(), $this->borders, 1,
