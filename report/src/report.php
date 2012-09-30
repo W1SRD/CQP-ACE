@@ -86,8 +86,9 @@ class NCCCReportPDF extends TCPDF {
 
   private function StationAndOps($entry) {
     $ops = $entry->GetOperators();
-    if ((count($ops) == 0) or ((count($ops) == 1) and 
-			       (strcmp($entry->GetCallsign(), $ops[0]) == 0))) {
+    $len = count($ops);
+    if (($len == 0) or (($len == 1) and 
+			(strcmp($entry->GetCallsign(), $ops[0]) == 0))) {
       return array($entry->GetCallsign(), ""); /* simple case */
     }
     $includesstation = false;
@@ -102,8 +103,13 @@ class NCCCReportPDF extends TCPDF {
 	$includesstation = true;
       }
     }
-    $result = $entry->GetCallSign() . " (" . ($includesstation ? "+ " : "") .
-      $opslist . ")";
+    if ($len == 1) {
+      $result = $entry->GetCallSign() . " (" . $opslist . " op)";
+    }
+    else {
+      $result = $entry->GetCallSign() . " (" . ($includesstation ? "+ " : "") .
+	$opslist . ")";
+    }
     if ($this->GetStringWidth($result) <= $this->columnwidths[0]) {
       return array($result, "");
     }
