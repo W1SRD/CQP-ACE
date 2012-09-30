@@ -317,14 +317,14 @@ function XHDRcrack() {
       _xhdr_cabSoapbox($l);
     } elseif (preg_match("/^CLUB.*?:/", $l)) {
       // Club record...
-      $l = preg_replace("/^CLUB.*?: /", '', $l);
-      $l = preg_replace("/\s{2,}/", '', $l);
-      $l = preg_replace("/[,']/", '-', $l);
+      $l = preg_replace("/^CLUB.*?:\s{0,}/", '', $l);
+      $l = preg_replace("/\s{2,}/", ' ', $l);
+      $l = preg_replace("/[\",']/", '-', $l);
     
       // Check for a NULL club record
-      $l = (preg_replace('/ /', '', $l) == '') ? "NONE GIVEN" : $l;
+      $l = (!$l || preg_replace('/ /', '', $l) == '') ? "NONE GIVEN" : $l;
 
-      $_xhdr_CQPF[':club'] = trim(strtoupper(trim($l)));
+      $_xhdr_CQPF[':club'] = strtoupper(trim($l));
     } elseif (preg_match("/CLAIMED-SCORE:/", $l)) {
       $l = preg_replace("/^CLAIMED-SCORE: /", '', $l);
       $l = preg_replace("/\s{2,}/", '', $l);

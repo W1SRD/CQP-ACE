@@ -19,22 +19,22 @@ require_once('log.inc.php');
 
 $narg = count($argv);
 if ($narg != 2) {
-  error_log("Usage: xhdr <inlog>\n");
+  error_log("Usage: xhdr <email> <inlog>\n");
   exit(1);
 }
 
-$USER = getenv('CQPUSER');
-$PASS = getenv('CQPPASS');
+$USER = getenv('ACEUSER');
+$PASS = getenv('ACEPASS');
 
 
 // Open the log file
-$LOG = fopen($argv[1], "r");
+$LOG = fopen($argv[2], "r");
 if (!$LOG) {
   error_log("Can't open input file - $argv[1]\n");
   exit(1);
 }
 
-$CQPF = CabCrack("stu@ridgelift.com", $argv[1], _xhdr_getlog());
+$CQPF = CabCrack($argv[1], $argv[2], _xhdr_getlog());
 
 if (!$CQPF) {
   error_log("Failed processing Cabrillo log\n");

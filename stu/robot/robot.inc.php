@@ -277,6 +277,8 @@ function SendResponse($msg, $CQPF, $fname, $dbres) {
       $b .= "your entry.  You can check out the FAQ below for the most likely reason but\n";
       $b .= "my human masters will take care of this manually.  Please be patient... they\n";
       $b .= "aren't as fast at this as I am - even if I do need their help occasionally!\n";
+      $b .= "\n";
+      $b .= "ROBOT MESSAGE #1:\n";
       break;
   }
 
@@ -342,32 +344,38 @@ function NonComprendez($msg, $needHuman) {
 
   switch ($needHuman) {
     case TOOMANYATTACHMENTS:
+      $b .= "ROBOT MESSAGE #2:\n";
       $b .= "We found more than one attachment on the message and so the robot\n";
       $b .= "can't figure out which is the right one.\n";
       break;
 
     case NOCABRILLOATTACHMENT:
+      $b .= "ROBOT MESSAGE #3:\n";
       $b .= "We found an attachment but it doesn't look like it's in Cabrillo\n";
       $b .= "format.  No worries - my human boss will figure it out!\n";
       break;
 
     case NOCABRILLOBODY:
+      $b .= "ROBOT MESSAGE #4:\n";
       $b .= "We didn't find an attachment and couldn't find a Cabrillo log in\n";
       $b .= "the message itself.\n";
       break;
 
     case NOTCQPCONTEST:
+      $b .= "ROBOT MESSAGE #5:\n";
       $b .= "We found a Cabrillo log but either the CONTEST: header record is\n";
       $b .= "missing or it doesn't look like a log for CQP\n";
       break;
 
     case CABRILLOERROR:
+      $b .= "ROBOT MESSAGE #6:\n";
       $b .= "We found a Cabrillo log but we had a problem checking it.  This is\n";
       $b .= "because either this isn't a log for CQP or because my human boss didn't\n";
       $b .= "get his coding right for all cases - he's only human after all.\n";
       break;
 
     default:
+      $b .= "ROBOT MESSAGE #7:\n";
       $b .= "This problem is above my pay grade!  We'll leave this to the human.\n";
       break;
   }
