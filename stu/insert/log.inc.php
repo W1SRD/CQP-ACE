@@ -27,12 +27,26 @@ insert into LOG
   set
   CALLSIGN = trim(:callsign),
   EMAIL_ADDRESS = trim(:email_address),
-  STATION_LOCATION = trim(:station_location),
+  STATION_LOCATION = ( 
+    select NAME from MULTIPLIER as m
+      where (m.ID = (
+        select MULTIPLIER_ID from MULTIPLIER_ALIAS as ma
+          where ma.ALIAS = trim(:station_location)
+        )
+      )
+    ),
   OPERATOR_CATEGORY = :operator_category,
   POWER_CATEGORY = :power_category,
   STATION_CATEGORY = :station_category,
   TRANSMITTER_CATEGORY = :transmitter_category,
-  CLUB = trim(:club),
+  CLUB = ( 
+    select NAME from CLUB as c
+      where (c.ID = (
+        select CLUB_ID from CLUB_ALIAS as ca
+          where ca.ALIAS = trim(:club)
+        )
+      )
+    ),
   SUBMISSION_DATE = :submission_date,
   OVERLAY_YL = :overlay_yl,
   OVERLAY_YOUTH = :overlay_youth,
@@ -51,12 +65,26 @@ private $ROW_UPDATE = <<<ENDSQL
 update LOG 
   set
   EMAIL_ADDRESS = trim(:email_address),
-  STATION_LOCATION = trim(:station_location),
+  STATION_LOCATION = (
+    select NAME from MULTIPLIER as m
+      where (m.ID = (
+        select MULTIPLIER_ID from MULTIPLIER_ALIAS as ma
+          where ma.ALIAS = trim(:station_location)
+        )
+      )
+    ),
   OPERATOR_CATEGORY = :operator_category,
   POWER_CATEGORY = :power_category,
   STATION_CATEGORY = :station_category,
   TRANSMITTER_CATEGORY = :transmitter_category,
-  CLUB = trim(:club),
+  CLUB = (
+    select NAME from CLUB as c
+      where (c.ID = (
+        select CLUB_ID from CLUB_ALIAS as ca
+          where ca.ALIAS = trim(:club)
+        )
+      )
+    ),
   SUBMISSION_DATE = :submission_date,
   OVERLAY_YL = :overlay_yl,
   OVERLAY_YOUTH = :overlay_youth,

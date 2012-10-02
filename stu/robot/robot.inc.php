@@ -185,8 +185,10 @@ function CabGetCall($log) {
   if (preg_match("/(QSO:.*\n)/ms", $log, $match)) {
     // Got a QSO record...  clean it up and split it into fields
     $q = $match[1];
+    $q = preg_replace("/['\"]/", '', $q);
     $q = preg_replace("/[\s|\t]{1,}/", ' ', $q);
     $f = explode(' ', $q);
+    $f[5] = preg_replace('/\//', '-', $f[5]);
     return($f[5]);	// Cabrillo log should have this!
   }
 
@@ -208,7 +210,7 @@ function CabGetQcount($log) {
 // CabCrack($log)
 //
 // Returns an associative array
-// of all the data required to populate a CQPACE log table
+// of all the data required to populate a CQP-ACE log table
 // database row...
 
 function CabCrack($email, $fname, $log) {

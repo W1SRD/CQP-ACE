@@ -5,7 +5,7 @@
 //   to pull and thread logs for CQP.
 //
 
-require_once('/usr/local/lib/php/Mail.php');
+require_once('Mail.php');
 
 // Global Data
 
@@ -121,7 +121,7 @@ function erSendMessage($from, $to, $subject, $body) {
     'From' => $from,
     'To'   => $to,
     'Subject' => $subject,
-    'MIME-Version' => '1.',
+    'MIME-Version' => '1.0',
     'Content-Type' => 'text/plain',
   );
 

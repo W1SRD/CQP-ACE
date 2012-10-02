@@ -1,4 +1,4 @@
-#!/usr/local/bin/php
+#!/usr/bin/php
 <?php
 
 // Mail robot for CQP
@@ -44,7 +44,7 @@ $JUNK = "SPAMWonderfulSPAM";    // Stuff we think might be SPAM
 
 // Path names for data storage
 $CABLOGS = '/mnt/ec2-user/CQPlogs';
-// $CABLOGS = ".";
+//$CABLOGS = ".";
 $OTHER = '.';
 
 // Defines
@@ -163,7 +163,7 @@ while (1) {
         pd("  - Error writing $CABLOGS/$fname - aborting!");
         exit(1);
       }
-
+      
       // Change the mode on the file to prevent accidental
       // deletion. 
       chmod("$CABLOGS/$fname", 0400);
