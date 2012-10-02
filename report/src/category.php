@@ -39,6 +39,7 @@ class EntryCategory {
  */
 class Entry {
   protected $callsign = "";
+  protected $stationcall = "";
   protected $operators = array();
   protected $num_CW = 0;
   protected $num_PH = 0;
@@ -65,11 +66,16 @@ class Entry {
     $this->new_record = true;
   }
 
+  public function SetStationCall($stationcall) {
+    $this->stationcall = $stationcall;
+  }
+
   public function AddFootnote($footnote) {
     $this->footnote = $footnote;
   }
 
   public function GetCallsign() { return $this->callsign; }
+  public function GetStationCall() { return $this->stationcall; }
   public function GetOperators() { return $this->operators; }
   public function GetNumCW() { return $this->num_CW; }
   public function GetNumPH() { return $this->num_PH; }
