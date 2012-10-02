@@ -226,7 +226,7 @@ function erGetMessage($msg) {
   $m = array();
   $m['FROM'] = $header->from[0]->mailbox . '@' . $header->from[0]->host;
   $m['TO'] =   $header->to[0]->mailbox . '@' . $header->to[0]->host;  
-  $m['SUBJECT'] = $header->subject;
+  $m['SUBJECT'] = $header->subject ? $header->subject : '';
   $m['DATE'] = $header->date;
   $m['BODY'] = erGetBody($msg, $structure);
   $m['HEADERS'] = imap_fetchheader($IMAP, $msg);

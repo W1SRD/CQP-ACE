@@ -43,8 +43,8 @@ $DONE = 'Processed';		// Robot processed messages
 $JUNK = "SPAMWonderfulSPAM";    // Stuff we think might be SPAM
 
 // Path names for data storage
-// $CABLOGS = '/mnt/ec2-user/CQPlogs';
-$CABLOGS = ".";
+$CABLOGS = '/mnt/ec2-user/CQPlogs';
+// $CABLOGS = ".";
 $OTHER = '.';
 
 // Defines
@@ -163,6 +163,10 @@ while (1) {
         pd("  - Error writing $CABLOGS/$fname - aborting!");
         exit(1);
       }
+
+      // Change the mode on the file to prevent accidental
+      // deletion. 
+      chmod("$CABLOGS/$fname", 0400);
 
       pd("    From: " . $msg['FROM']);
       pd("      Call: $call      File: $fname");

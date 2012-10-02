@@ -208,7 +208,7 @@ function CabGetQcount($log) {
 // CabCrack($log)
 //
 // Returns an associative array
-// of all the data required to populate a CQP-ACE log table
+// of all the data required to populate a CQPACE log table
 // database row...
 
 function CabCrack($email, $fname, $log) {
@@ -316,7 +316,7 @@ function SendResponse($msg, $CQPF, $fname, $dbres) {
   $b .= "Thanks again and 73!\n";
   $b .= "The NCCC CQP Team\n";
 
-  $subject = "[$fname] " . $msg['SUBJECT'];
+  $subject = "[$fname] " . ($msg['SUBJECT'] ? $msg['SUBJECT'] : $CQPF[':callsign']);
 
   erSendMessage($msg['TO'], $msg['FROM'], $subject, $b);
 }

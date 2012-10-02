@@ -1,6 +1,6 @@
 <?php
 
-// Support functions to access and update the LOG table in CQP-ACE
+// Support functions to access and update the LOG table in CQPACE
 //
 // NOTE: For security purposes, you must set the database name, 
 // user name and password by calling functions provided below.
@@ -16,7 +16,7 @@ class CQPACE_LOG_TABLE {
 private $USER = '';			// Username for DB access
 private $PASS = '';			// Password for DB access
 private $HOST = '127.0.0.1';		// Host for the DB
-private $DBNAME = 'CQP-ACE';		// Database to access
+private $DBNAME = 'CQPACE';		// Database to access
 
 private $DBH;				// PDO database handle...
 
@@ -86,7 +86,7 @@ ENDSQL;
 // Constructor
 // 
 
-function __construct($user, $pass, $host = '127.0.0.1', $db = 'CQP-ACE') {
+function __construct($user, $pass, $host = '127.0.0.1', $db = 'CQPACE') {
   // Set up the local variables and create the connection to the DB
 
   $this->USER = $user;  $this->PASS = $pass;
