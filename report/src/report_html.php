@@ -120,7 +120,8 @@ class NCCCReportPDF extends TCPDF {
       $testresult = $entry->GetCallSign() . " (" . $opslist . " op";
       $result = $entry->GetCallSign() . $footnotestr . " (" . 
 	$opslist . " op";
-      if (strcmp($entry->GetStationCall(),"")!=0) {
+      if ((strcmp($entry->GetStationCall(),"")!=0) and
+	  (strcmp($entry->GetStationCall(),$entry->GetCallSign()) != 0)) {
 	$testresult .= (" @" . $entry->GetStationCall());
 	$result .= (" @" . $entry->GetStationCall());
       }
@@ -131,22 +132,25 @@ class NCCCReportPDF extends TCPDF {
       $testresult = $entry->GetCallSign() . " (" . 
 	($includesstation ? "+ " : "") .
 	$opslist . 
-	(strcmp($entry->GetStationCall(),"") != 0 
-	 ? (" @" . $entry->GetStationCall() . " ") : "") .
+	(((strcmp($entry->GetStationCall(),"") != 0) and
+	  (strcmp($entry->GetStationCall(),$entry->GetCallSign()) != 0))
+	 ? (" @" . $entry->GetStationCall()) : "") .
 	")";
       $result = $entry->GetCallSign() . $footnotestr .
 	" (" . 
 	($includesstation ? "+ " : "") .
 	$opslist . 
-	(strcmp($entry->GetStationCall(),"") != 0 
-	 ? (" @" . $entry->GetStationCall() . " ") : "") .
+	((strcmp($entry->GetStationCall(),"") != 0  and
+	  (strcmp($entry->GetStationCall(),$entry->GetCallSign()) != 0))
+	 ? (" @" . $entry->GetStationCall()) : "") .
 	")";
     } // 220
     if ($this->GetStringWidth($testresult) <= 0.98*$this->columnwidths[0]/100*72*7.5) {
       return array($result, "");
     }
     return array($entry->GetCallSign().$footnotestr.
-		 (strcmp($entry->GetStationCall(),"") != 0 
+		 (((strcmp($entry->GetStationCall(),"") != 0 ) and
+		   (strcmp($entry->GetStationCall(),$entry->GetCallSign()) != 0))
 		  ? (" (@" . $entry->GetStationCall() . ")") : ""),
 		 $entry->GetCallSign() . " ops = " .
 		 ($includesstation ? ($entry->GetCallSign() . ", ") : "") . 
@@ -244,6 +248,7 @@ $cats = array();
 $cat = new EntryCategory("Alabama");
 $ent = new Entry("K4ZBG", array(), 292, 424, 57,98125,"L");
 $ent->SetNewRecord();
+$ent->SetStationCall("K4ZBG");
 $ent->AddFootnote("New Alabama Record");
 $cat->AddEntry($ent);
 $ent = new Entry("K4ZBG", array(), 292, 424, 57,98125,"L");
@@ -307,6 +312,7 @@ $cats[] = $cat;
 
 $cat = new EntryCategory("San Diego");
 $ent = new Entry("W6YI", array("N6MJ"), 1129, 1916, 58, 418847, "");
+$ent->SetStationCall("W6YI");
 $ent->SetNewRecord();
 $ent->AddFootnote("New San Diego record");
 $cat->AddEntry($ent);
@@ -349,6 +355,9 @@ $ent->SetStationCall("NS6T");
 $cat->AddEntry($ent);
 $cat->AddEntry(new Entry("AE6IC", array("AE6IC", "KJ6JUS"), 235, 362, 54, 77247, "M/S L"));
 $cat->AddEntry(new Entry("W6NWG", array("W5NYV", "KB5MU"), 0, 276, 42, 23184, "M/S L"));
+$ent = new Entry("W6NWG", array("W5NYV", "KB5MU"), 0, 276, 42, 23184, "M/S L");
+$ent->SetStationCall("NS6T");
+$cat->AddEntry($ent);
 $cat->AddEntry(new Entry("KK6TV", array(), 29, 77, 32, 7760,  "M/S L"));
 $cat->AddEntry(new Entry("W6ABE", array(), 0, 94, 20, 3780,  "M/S L"));
 $cats[] = $cat;

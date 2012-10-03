@@ -20,8 +20,9 @@ class EntryCategory {
   protected $entries = array();
   
   
-  public function __construct($name) {
+  public function __construct($name, $entries=array()) {
     $this->name = $name;
+    $this->entries = $entries;
   }
 
   public function AddEntry($entry) {
@@ -49,10 +50,14 @@ class Entry {
   protected $new_record = false; /* true means that this entry is a
 				    new record for the category. */
   protected $footnote = "";
+  protected $loc_abbrev = "";
+  protected $loc_full = "";
+  protected $all_mult_time = NULL;
 
   public function __construct($callsign, $operators = array(),
 			      $num_CW=0, $num_PH=0, $num_mult = 0,
-			      $total_score = 0, $entry_class = '') {
+			      $total_score = 0, $entry_class = '',
+			      $qth_abbrev='', $qth_full='') {
     $this->callsign = $callsign;
     $this->operators = $operators;
     $this->num_CW = $num_CW;
@@ -60,6 +65,9 @@ class Entry {
     $this->num_mult = $num_mult;
     $this->total_score = $total_score;
     $this->entry_class = $entry_class;
+    $this->loc_abbrev = $qth_abbrev;
+    $this->loc_full = $qth_full;
+    $this->all_multi_time = NULL;
   }
 
   public function SetNewRecord() {
@@ -74,6 +82,10 @@ class Entry {
     $this->footnote = $footnote;
   }
 
+  public function SetAllMultipliers($timedate) {
+    $this->all_multi_time = $timedate;
+  }
+
   public function GetCallsign() { return $this->callsign; }
   public function GetStationCall() { return $this->stationcall; }
   public function GetOperators() { return $this->operators; }
@@ -84,4 +96,21 @@ class Entry {
   public function GetEntryClass() { return $this->entry_class; }
   public function GetNewRecord() { return $this->new_record; } 
   public function GetFootnote() { return $this->footnote; }
+  public function GetAllMultipliers() { return $this->all_multi_time; }
+}
+
+class Club {
+  protected $name = "";
+  protected $numlogs = 0;
+  protected $totalscore = 0;
+
+  public function __construct($name, $logs, $score) {
+    $this->name = $name;
+    $this->numlogs = $logs;
+    $this->totalscore = $score;
+  }
+
+  public function GetName() { return $this->name; }
+  public function GetNumLogs() { return $this->numlogs; }
+  public function GetScore() { return $this->totalscore; }
 }
