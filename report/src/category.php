@@ -17,12 +17,16 @@
  */
 class EntryCategory {
   protected $name = "";
+  protected $location = "";
   protected $entries = array();
+  protected $numbered = false;
   
   
-  public function __construct($name, $entries=array()) {
+  public function __construct($name, $entries=array(), $numbered=false, $location="") {
     $this->name = $name;
     $this->entries = $entries;
+    $this->numbered = $numbered;
+    $this->location = $location;
   }
 
   public function AddEntry($entry) {
@@ -32,6 +36,10 @@ class EntryCategory {
   public function GetName() { return $this->name; }
 
   public function GetEntries() { return $this->entries; }
+
+  public function GetNumbered() { return $this->numbered; }
+
+  public function GetLocation() { return $this->location; }
 }
 
 /**
@@ -96,6 +104,8 @@ class Entry {
   public function GetEntryClass() { return $this->entry_class; }
   public function GetNewRecord() { return $this->new_record; } 
   public function GetFootnote() { return $this->footnote; }
+  public function GetQTH() { return $this->loc_abbrev; }
+  public function GetLocation() { return $this->loc_full; }
   public function GetAllMultipliers() { return $this->all_multi_time; }
 }
 
