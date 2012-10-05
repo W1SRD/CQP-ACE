@@ -146,7 +146,7 @@ class NCCCSummaryPDF extends TCPDF {
     $starttime = new DateTime("2011-10-01 16:00:00");
     $endtime = $ent->GetAllMultipliers();
     $interval = $endtime->diff($starttime);
-    return "Time: " . $endtime->format("H:i") . $interval->format(" (%h hr %i min)");
+    return "Time: " . $endtime->format("H:i") . $interval->format(" (%hhr %imin)");
   }
 
   public function RightColumn($california, $world, $clubs, $besttimes) {
@@ -160,24 +160,20 @@ class NCCCSummaryPDF extends TCPDF {
 <tr><th align=\"center\" width=\"". $widths[0]."%\">#</th><th align=\"center\"width=\"". $widths[1]."%\">Callsign</th><th align=\"center\"width=\"". $widths[2]."%\">QTH</th><th align=\"center\"width=\"". $widths[3]."%\">Score</th></tr>
 ";
     $this->ShowRightEntries($str,$california->GetEntries());
-    $str .= "</table>";
-    $this->WriteHTML($str);
-    $str = "<table width=\"100%\" border=\"1\" cellpadding=\"1\">
-<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#ccffcc;\">" . $world->GetName() . "</th></tr>
+    $str .= "<tr><td colspan=\"4\" width=\"100%\">&nbsp;</td></tr>";
+    $str .= "<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#ccffcc;\">" . $world->GetName() . "</th></tr>
 <tr><th align=\"center\" width=\"". $widths[0]."%\">#</th><th align=\"center\"width=\"". $widths[1]."%\">Callsign</th><th align=\"center\"width=\"". $widths[2]."%\">QTH</th><th align=\"center\"width=\"". $widths[3]."%\">Score</th></tr>
 ";
     $this->ShowRightEntries($str,$world->GetEntries());
-    $str .= "</table>\n";
-    $this->WriteHTML($str);
-    $str = "<table width=\"100%\" border=\"0\" cellpadding=\"1\">
-<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">Top Club Entries (CA and non-CA)</th></tr>\n";
+    $str .= "<tr><td colspan=\"4\" width=\"100%\">&nbsp;</td></tr>";
+    $str .= "<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">Top Club Entries (CA and non-CA)</th></tr>\n";
     foreach ($clubs as $club) {
       $str .= ("<tr><td width=\"". $widths[0]."%\">&nbsp;</td><td width=\"". $widths[1]."%\">" . $club->GetName() . "</td><td width=\"". $widths[2]."%\">" .
 	       strval($club->GetNumLogs()) .
 	       " logs</td><td align=\"right\" width=\"". $widths[3]."%\">" . $this->strformat($club->GetScore()) . 
 	       "</td></tr>\n");
     }
-    $str .= "</table>";
+    $str .= "</table>\n";
     $this->WriteHTML($str);
     $str = "<table width=\"100%\" border=\"0\" cellpadding=\"1\">
 <tr><th colspan=\"3\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">First to 58 Mults (CA and non-CA)</th></tr>\n";
