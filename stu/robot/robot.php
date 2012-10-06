@@ -30,6 +30,9 @@
 //
 
 
+// Set default timezone
+date_default_timezone_set('UTC');
+
 require_once('email.inc.php');
 require_once('robot.inc.php');
 require_once('errors.inc.php');
@@ -51,6 +54,9 @@ $OTHER = '.';
 define('WAITFORMORE', '300');	// 10 minutes
 define('IMAPWAIT', '60');	// 1 minute
 
+define('CQPSTART', strtotime('2012-10-06'));
+define('CQPEND',   strtotime('2012-10-07'));
+
 
 // MAIN
 // Grab user name and password for the account from
@@ -63,9 +69,6 @@ if (!$USER || !$PASS) {
   print "Can't find username or password in the ENV\n";
   exit(1);
 }
-
-// Set default timezone
-date_default_timezone_set('UTC');
 
 // Main processing loop - SLEEP delay is at the bottom
 
@@ -180,6 +183,13 @@ while (1) {
       $CQPF = CabCrack($msg['FROM'], $fname, $log);
       if (!$CQPF) {
         $needHuman = NOTCQPCONTEST;
+        break;
+      }
+
+      if (!CabCheckQDates($log, CQPSTART, CQPEND)) {
+        // Dammed if the dates in the log aren't within the window
+        // of this year's contest...
+        $needHuman = CQPDATEERROR;
         break;
       }
 

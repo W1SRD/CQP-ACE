@@ -14,11 +14,14 @@
 require_once('robot.inc.php');
 require_once('log.inc.php');
 
+function mypd($l) {
+  print ($l . "\n");
+}
 
 // Processing functions
 
 $narg = count($argv);
-if ($narg != 2) {
+if ($narg != 3) {
   error_log("Usage: xhdr <email> <inlog>\n");
   exit(1);
 }
@@ -51,9 +54,41 @@ unset($CQPF['MOBILE']);
 unset($CQPF['SCHOOL']);
 
 try {
+  print_r($CQPF);
+
   $logt = new CQPACE_LOG_TABLE($USER, $PASS);
-  $logt->log_row_create($CQPF);
-  print("Inserted : " . $CQPF[':callsign'] . "\n");
+
+  // Attempt a select on the callsign to see if a
+  // record exists..
+  try {
+    $row = $logt->log_row_select(array(':callsign' => $CQPF[':callsign']));
+  } catch (Exception $e) {
+    // This shouldn't happen... but just in case...
+    mypd("  CQP-ACE ERROR SELECT:");
+    mypd("  " . $e->getMessage());
+    CQPACERenameFile($fullfname);
+    return;
+  }
+
+  // Ok, we get this far, we know whether we have a record in
+  // the DB or not...  in either event, insert or update based on
+  // whether $row is TRUE
+
+  try {
+    if ($row) {
+      // A row already exists - this is an update
+      $logt->log_row_update($CQPF);
+      mypd("    DB record updated for " . $CQPF[':callsign']);
+    } else {
+      // No record for this callsign in the DB - insert
+      $logt->log_row_create($CQPF);
+      mypd("    DB record created for " . $CQPF[':callsign']);
+    }
+  } catch (Exception $e) {
+    // This shouldn't happen... but just in case...
+    mypd("    CQP-ACE ERROR CREATE/UPDATE:");
+    mypd("  " . $e->getMessage());
+  }
 } catch (Exception $e) {
   print ("Error on " . $CQPF[':callsign'] . "\n");
   print_r($CQPF);

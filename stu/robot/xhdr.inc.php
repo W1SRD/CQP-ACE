@@ -30,8 +30,8 @@ $_xhdr_CQPF = '';
 
 function _xhdr_cabCategory($l) {
   // Old styple category record
-  $l = preg_replace("/^CATEGORY: /", '', $l);
-  $l = preg_replace("/^CATEGORY.*: /", '', $l);
+  $l = preg_replace("/^CATEGORY:/", '', $l);
+  $l = preg_replace("/^CATEGORY.*:/", '', $l);
   $l = preg_replace("/\s{2,}/", ' ', $l);
 
   // Should be left with one or more tokens... bust into an array and proces
@@ -53,6 +53,10 @@ function _xhdr_cabCategory($l) {
 function _xhdr_parseCatToken($t) {
   global $_xhdr_CQPF;
 
+  // Remove all spaces - we should have a single token perhaps with a leading
+  // or trailing space
+  $t = preg_replace("/ /",'', $t);
+
   switch ($t) {
     case 'MULTI-OP':
     case 'MULTI-SINGLE':
@@ -71,7 +75,8 @@ function _xhdr_parseCatToken($t) {
       break;
 
     case 'TWO':
-      $_xhdr_CQPF['transmitter_category'] = 'TWO';
+      $_xhdr_CQPF[':transmitter_category'] = 'TWO';
+      $_xhdr_CQPF[':operator_category'] = 'MULTI-MULTI';
       break;
 
 
@@ -221,7 +226,7 @@ function _xhdr_CQPspecial($l) {
       break;
 
     case 'COUNTY EXPEDITION':
-      $_xhdr_CQPF[':station_category'] = 'MOBILE';
+      $_xhdr_CQPF[':station_category'] = 'CCE';
       break;
 
     case 'YL':
@@ -229,7 +234,7 @@ function _xhdr_CQPspecial($l) {
       break;
 
     case 'SCHOOL':
-      $_xhdr_CQPF[':station_category'] = TRUE;
+      $_xhdr_CQPF[':station_category'] = 'SCHOOL';
       break;
 
     case 'MOBILE':
@@ -359,12 +364,14 @@ function XHDRcrack() {
     $l = preg_replace("/\s{2,}/", ' ', $l);
     $f = explode(' ', trim($l));
   
-    // We should have 11 fields including the QSO: at the front
+    // We should have 11 or 12 fields including the QSO: at the front and
+    // the optional transmitter number as an optional 12th field
     // If so, field 5 should be the sent callsign and field 7 the sent QTH...
-    if (count($f) != 11) {
-      error_log("    INVALID number of fields in QSO record #1 - should be 11\n");
+    if (count($f) != 11 && count($f) != 12) {
+      error_log("    INVALID number of fields in QSO record #1 - should be 11(12)\n");
       return(array());
     }
+    // $f[5] = preg_replace("/\//",'-', $f[5]);
     $_xhdr_CQPF[':callsign'] = preg_replace("/ /", '', trim($f[5]));
     $_xhdr_CQPF[':station_location'] = preg_replace("/ /", '',  trim($f[7]));
   }
