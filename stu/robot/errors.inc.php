@@ -8,6 +8,7 @@ define('NOCABRILLOATTACHMENT', '2');
 define('NOCABRILLOBODY', '3');
 define('NOTCQPCONTEST', '4');
 define('CABRILLOERROR', '5');
+define('CQPDATEERROR', '6');
 
 ?>
 

@@ -12,7 +12,7 @@ date_default_timezone_set('UTC');
 // Globals
 
 $HEAD = file_get_contents("rpthead.html");
-$HEAD = preg_replace("/Received Page/", "Received Page - " . gmdate("d-M-Y  H:i:s e"), $HEAD);
+$HEAD = preg_replace("/Logs Received Page/", "Logs Received - " . gmdate("d-M-Y  H:i:s e"), $HEAD);
 
 
 $BODY = '';

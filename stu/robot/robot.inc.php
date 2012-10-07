@@ -99,6 +99,21 @@ function WebformCheck($msg) {
    }
 }
 
+//
+// CabCleanQRec($q)
+// 
+// Clean up a Cab QSO record
+//
+
+function CabCleanQRec($q) {
+  $q = preg_replace('/:/', ': ', $q);           // At least one space after QSO:
+  $q = preg_replace("/[\n\r'\"]/", '', $q);     // Remove \n, \r, ' and "
+  $q = preg_replace("/[\s|\t]{1,}/", ' ', $q);  // Replace multiple spaces and tabs with 1 space
+  $q = trim($q);
+
+  return ($q);
+}
+
 
 //
 // CabFileCheck($msg)
@@ -185,8 +200,7 @@ function CabGetCall($log) {
   if (preg_match("/(QSO:.*\n)/ms", $log, $match)) {
     // Got a QSO record...  clean it up and split it into fields
     $q = $match[1];
-    $q = preg_replace("/['\"]/", '', $q);
-    $q = preg_replace("/[\s|\t]{1,}/", ' ', $q);
+    $q = CabCleanQRec($q);
     $f = explode(' ', $q);
     $f[5] = preg_replace('/\//', '-', $f[5]);
     return($f[5]);	// Cabrillo log should have this!
@@ -203,6 +217,38 @@ function CabGetCall($log) {
 
 function CabGetQcount($log) {
   return (preg_match_all("/(^QSO:.*?\n)/ms", $log, $m));
+}
+
+
+
+//
+// CabCheckQDates($log,$start,$end)
+//  
+// Check that the first and last Q records in the Cabrillo are within
+// the window of the START and END
+
+function CabCheckQDates($log, $start, $end) {
+  // Crack log into QSO records...
+  if (!preg_match_all("/(^QSO:.*?\n)/ms", $log, $m)) {
+    // no QSO records... return FALSE
+    return FALSE;
+  }
+
+  // If we get here, $m contains at least two entries... the log and the first
+  // (perhaps only) QSO record found - as an array of arrays....
+
+  $first = $m[1][0];
+  $last  = $m[1][count($m[1]) - 1];
+  
+  // Clean up both first and last
+  $first = explode(' ', CabCleanQRec($first));
+  $last  = explode(' ', CabCleanQRec($last));
+ 
+  // Element 3 should contain the date of each Q...
+  
+  return ((strtotime($first[3]) >= $start) && 
+           (strtotime($last[3]) <= $end && strtotime($last[3]) >= $start) 
+         ) ? TRUE : FALSE;
 }
 
 
@@ -376,9 +422,17 @@ function NonComprendez($msg, $needHuman) {
       $b .= "get his coding right for all cases - he's only human after all.\n";
       break;
 
+    case CQPDATEERROR:
+      $b .= "ROBOT MESSAGE #8:\n";
+      $b .= "We found a Cabrillo log and everything looks OK EXCEPT the dates of\n";
+      $b .= "QSOs are not within the time window of this year's CQP.  Please check\n";
+      $b .= "check if you accidentally picked up a CQP log from a previous year.\n";
+      break;
+
     default:
       $b .= "ROBOT MESSAGE #7:\n";
-      $b .= "This problem is above my pay grade!  We'll leave this to the human.\n";
+      $b .= "This problem is above my pay grade!  We'll leave this to the human.\n"; 
+      $b .= "We have your log but please read the FAQ... link below...\n";
       break;
   }
 

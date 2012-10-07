@@ -3330,6 +3330,26 @@ insert into MULTIPLIER_ALIAS
   MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'ON');
 insert into MULTIPLIER_ALIAS
   set
+  MULTIPLIER_NAME = 'GTA',
+  ALIAS = 'VE3',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'ON');
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'ONS',
+  ALIAS = 'VE3',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'ON');
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'ONN',
+  ALIAS = 'VE3',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'ON');
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'ONE',
+  ALIAS = 'VE3',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'ON');
+insert into MULTIPLIER_ALIAS
+  set
   MULTIPLIER_NAME = 'FL',
   ALIAS = 'SFL',
   MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'FL');

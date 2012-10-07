@@ -22,7 +22,7 @@ function _xhdr_getl() {
 
 function _xhdr_getlog() {
   global $argv;
-  return(file_get_contents($argv[1]));
+  return(file_get_contents($argv[2]));
 }
 
 ?>
