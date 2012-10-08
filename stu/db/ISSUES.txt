@@ -1,0 +1,20 @@
+When issues are resolved, move them down below the second heading.
+
+List of unresolved issues
+=========================
+* Do the # of CW, Phone, and Total QSOs need to be stored in the DB or
+  recalculated.
+* Do the # of mults need to be stored or are they easily generated.
+* Should the time to 58 be stored or recalculated every time
+* How is the best mobile calculated
+* For the "first to 58" thing, it would be useful to have some data about
+  the current running of the contest
+  Table=CONTEST
+     NAME VARCHAR(32),
+     YEAR INT,
+     START DATETIME,
+     END   DATETIME
+  This would also be useful to identify QSOs out of bounds when we redo GREEN.
+
+List of formerly unresolved issues
+==================================
