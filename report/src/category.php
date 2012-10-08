@@ -124,3 +124,23 @@ class Club {
   public function GetNumLogs() { return $this->numlogs; }
   public function GetScore() { return $this->totalscore; }
 }
+
+class MobileEntry {
+  protected $entry;
+  protected $num_total_qsos = 0;
+  protected $num_counties = 0;
+  protected $newrecord = false;
+  public function __construct($entry=NULL, $qsos=0, $counties=0, $newrecord=false) {
+    $this->entry = $entry;
+    $this->num_total_qsos = $qsos;
+    $this->num_counties = $counties;
+    $this->newrecord = $newrecord;
+  }
+  public function GetEntry() { return $this->entry; }
+  public function GetNumQSO() { return $this->num_total_qsos; }
+  public function GetNumCounty() { return $this->num_counties; }
+  public function GetNewRecord() { return $this->newrecord; }
+  public function IsValid() {
+    return isset($this->entry);
+  }
+}

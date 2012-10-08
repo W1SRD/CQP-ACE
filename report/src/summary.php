@@ -11,6 +11,14 @@ require_once('../3rdparty/tcpdf/tcpdf.php');
 require_once('category.php');
 
 
+function PhoneTotal($ent) {
+  return $ent->GetNumPH();
+}
+
+function CWTotal($ent) {
+  return $ent->GetNumCW();
+}
+
 class NCCCSummaryPDF extends TCPDF {
   const LEFTMARGIN = 54;
   const RIGHTMARGIN = 252;
@@ -20,7 +28,7 @@ class NCCCSummaryPDF extends TCPDF {
   protected $borders = 0;
   protected $header_height = 22;
   protected $baseline_skip = 12;
-  protected $fontsize = 8;
+  protected $fontsize = 7.5;
 
   public function Header() {
     $this->SetFillColorArray(array(204, 255, 204));
@@ -118,7 +126,8 @@ class NCCCSummaryPDF extends TCPDF {
 	")";
     } // 220
     $margins = $this->getMargins();
-    if ($this->GetStringWidth($testresult) <= $colwidth) {
+    if ($this->GetStringWidth($testresult,'helvetica','B', $this->fontsize) <=
+	$colwidth) {
       return array($result, "");
     }
     return array($entry->GetCallSign().$footnotestr.
@@ -173,13 +182,11 @@ class NCCCSummaryPDF extends TCPDF {
 	       " logs</td><td align=\"right\" width=\"". $widths[3]."%\">" . $this->strformat($club->GetScore()) . 
 	       "</td></tr>\n");
     }
-    $str .= "</table>\n";
-    $this->WriteHTML($str);
-    $str = "<table width=\"100%\" border=\"0\" cellpadding=\"1\">
-<tr><th colspan=\"3\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">First to 58 Mults (CA and non-CA)</th></tr>\n";
+    $str .= "<tr><td colspan=\"4\" width=\"100%\">&nbsp;</td></tr>";
+    $str .= "<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">First to 58 Mults (CA and non-CA)</th></tr>\n";
     foreach ($besttimes as $bt) {
       $str .= ("<tr><td width=\"". $widths[0]."%\">&nbsp;</td><td width=\"".
-	       $widths[1]."%\">" . $bt->GetCallsign() . "</td><td width=\"". 
+	       $widths[1]."%\">" . $bt->GetCallsign() . "</td><td colspan=\"2\" width=\"". 
 	       ($widths[2]+$widths[3])."%\">" .
 	       $this->TimeReport($bt) . "</td></tr>\n");
     }
@@ -216,10 +223,10 @@ class NCCCSummaryPDF extends TCPDF {
 
   public function WriteCatBody(&$str, $cat, $widths) {
     $count = 1;
-    $margins = $this->GetMargins();
-    $totalwidth = (8.5*72 - $margins["right"]) - $margins["left"];
-    $colwidth = 0.98*$widths[1]*$totalwidth/100.0;
+    $colwidth = $this->ColumnWidth($widths[1]);
     foreach ($cat->GetEntries() as $ent) {
+      $colorstr =  ($ent->GetNewRecord() ? " style=\"color:#FF0000;\" " : 
+		    "");
       $str .= "<tr>";
       if ($cat->GetNumbered()) {
 	$str .= ("<td width=\"".strval($widths[0]) ."%\">".strval($count). "</td>");
@@ -228,17 +235,17 @@ class NCCCSummaryPDF extends TCPDF {
 	$str .= ("<td width=\"".strval($widths[0]) ."%\">&nbsp;</td>");
       }
       list ($stationcall, $extraline) = $this->StationAndOps($ent, $colwidth);
-      $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\">" . 
+      $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\" style=\"font-weight:bold;\"" . $colorstr . ">" . 
 	       $stationcall . 
-	       "</td><td align=\"left\" width=\"".strval($widths[2]) ."%\">" . 
+	       "</td><td align=\"left\" width=\"".strval($widths[2]) ."%\"" . $colorstr . ">" . 
 	       $ent->GetLocation() .
-	       "</td><td align=\"right\" width=\"".strval($widths[3]) ."%\">" .
+	       "</td><td align=\"right\" width=\"".strval($widths[3]) ."%\"" . $colorstr . ">" .
 	       strval($ent->GetNumMult()) . 
-	       "</td><td align=\"right\" width=\"".strval($widths[4]) ."%\">" .
+	       "</td><td align=\"right\" width=\"".strval($widths[4]) ."%\"" . $colorstr . ">" .
 	       $this->strformat($ent->GetNumCW()).
-	       "</td><td align=\"right\" width=\"".strval($widths[5]) ."%\">" .
+	       "</td><td align=\"right\" width=\"".strval($widths[5]) ."%\"" . $colorstr . ">" .
 	       $this->strformat($ent->GetNumPH()).
-	       "</td><td align=\"right\" width=\"".strval($widths[6]) ."%\">" .
+	       "</td><td align=\"right\" width=\"".strval($widths[6]) ."%\"" . $colorstr . ">" .
 	       $this->strformat($ent->GetTotalScore()) .
 	       "</td></tr>\n");
       if (strcmp($extraline, "") != 0) {
@@ -251,14 +258,95 @@ class NCCCSummaryPDF extends TCPDF {
     }
   }
 
-  public function WriteCategories($cats, $widths) {
+  public function ColumnWidth($percent) {
+      $margins = $this->GetMargins();
+      $totalwidth = (8.5*72 - $margins["right"]) - $margins["left"];
+      return 0.98*$percent*$totalwidth/100.0;
+  }
+
+  public function WriteMobile(&$str, $widths, $mobile) {
+    if (isset($mobile) and $mobile->IsValid()) {
+      $colwidth = $this->ColumnWidth($widths[1]);
+      $ent = $mobile->GetEntry();
+      $str .= "<tr>";
+      $str .= "<th width=\"".$widths[0]."%\">&nbsp;</th>";
+      $str .= "<th style=\"background-color:#fde9d9;\" border=\"1\" width=\"".$widths[1]."%\" align=\"left\">Mobile with most QSOs</th>";
+      $str .= "<th style=\"background-color:#fde9d9;\" border=\"1\" width=\"".$widths[2]."%\" align=\"left\">California</th>";
+      $str .= "<th style=\"background-color:#fde9d9;\" border=\"1\" width=\"".strval($widths[3]+$widths[4]+$widths[5]+
+				    $widths[6]) .
+	"%\" colspan=\"4\">Results</th></tr>\n";
+      $str .= "<tr" . 
+	($mobile->GetNewRecord() ? " style=\"color:#ff0000;\"" : "") . ">";
+      $str .= "<td width=\"" . $widths[0] . "%\">&nbsp;</td>";
+      list ($stationcall, $extraline) = 
+	$this->StationAndOps($ent, $colwidth);
+      $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\" style=\"font-weight:bold;\">" . 
+	       $stationcall . 
+	       "</td>");
+      $str .= ("<td align=\"left\" width=\"".strval($widths[2]) ."%\">Various Counties</td>");
+      $str .= ("<td align=\"left\" width=\"" .
+	       strval($widths[3]+$widths[4]+$widths[5]+$widths[6]) .
+               "%\">" . sprintf("%d QSOs (%d counties)",
+				$mobile->GetNumQSO(),
+				$mobile->GetNumCounty()) .
+	       "</td>");
+      $str .= "</tr>\n";
+      if (strcmp($extraline, "") != 0) {
+	$str .= ("<tr><td width=\"".strval($widths[0]) .
+		 "%\">&nbsp;</td><td colspan=\"6\" align=\"left\" width=\"".
+		 strval(100-$widths[0]) ."%\" style=\"font-style: italics;\">" . $extraline .
+		 "</td></tr>\n");
+      }
+    }
+  }
+
+  public function WriteMostQSOs(&$str, $title, $entries, $func, $widths) {
+    $colwidth = $this->ColumnWidth($widths[1]);
+    $str .= "<tr>";
+    $str .= "<th width=\"".$widths[0]."%\">&nbsp;</th>";
+    $str .= "<th style=\"background-color:#fde9d9;\" colspan=\"2\" border=\"1\" width=\"".
+      strval($widths[1]+$widths[2])."%\" align=\"left\">Single-Op - Most " . $title . " QSOs (CA and non-CA)</th>";
+    $str .= "<th style=\"background-color:#fde9d9;\" border=\"1\" width=\"".
+      strval($widths[3]+$widths[4]+$widths[5]+ $widths[6]) .
+      "%\" colspan=\"4\">Results</th></tr>\n";
+    foreach ($entries as $ent) {
+      $str .= "<tr" . 
+	($ent->GetNewRecord() ? " style=\"color:#ff0000;\"" : "") . ">";
+      $str .= "<td width=\"" . $widths[0] . "%\">&nbsp;</td>";
+      list ($stationcall, $extraline) = 
+	$this->StationAndOps($ent, $colwidth);
+      $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\" style=\"font-weight:bold;\">" . 
+	       $stationcall . 
+	       "</td>");
+      $str .= ("<td align=\"left\" width=\"".strval($widths[2]) ."%\">".
+	       $ent->GetLocation() . "</td>");
+      $str .= ("<td align=\"left\" width=\"" .
+	       strval($widths[3]+$widths[4]+$widths[5]+$widths[6]) .
+               "%\">" . sprintf("%d QSOs", 
+				call_user_func($func, $ent)) .
+	       "</td>");
+      $str .= "</tr>\n";
+      if (strcmp($extraline, "") != 0) {
+	$str .= ("<tr><td width=\"".strval($widths[0]) .
+		 "%\">&nbsp;</td><td colspan=\"6\" align=\"left\" width=\"".
+		 strval(100-$widths[0]) ."%\" style=\"font-style: italics;\">" . $extraline .
+		 "</td></tr>\n");
+      }
+    }
+  }
+
+  public function WriteCategories($cats, $widths, $mobile, $ssb, $cw) {
     $this->SetFont('helvetica','', $this->fontsize);
     $str = "<table border=\"0\" width=\"100%\" cellpadding=\"1\">\n";
     foreach ($cats as $cat) {
       $this->WriteCatHeading($str, $cat, $widths);
       $this->WriteCatBody($str, $cat, $widths);
     }
+    $this->WriteMobile($str, $widths, $mobile);
+    $this->WriteMostQSOs($str, "SSB", $ssb, "PhoneTotal", $widths);
+    $this->WriteMostQSOs($str, "CW", $cw, "CWTotal", $widths);
     $str .= "</table>";
+    $str .= "<p style=\"color:#ff0000;\"><sup>*</sup>New Record</p>";
     $this->WriteHTML($str);
   }
 
@@ -267,19 +355,16 @@ class NCCCSummaryPDF extends TCPDF {
 		      (8.5-5)*72+NCCCSummaryPDF::LINEWIDTH);
     $this->SetY(NCCCSummaryPDF::TOPMARGIN-10);
     $widths = array(4,36,24,8,8,8,12);
-    $this->WriteCategories($cats, $widths);
+    $this->WriteCategories($cats, $widths, $mobile, $ssb, $cw);
   }
 
 
   public function Footer() {
-    $this->SetFont('times','B',12);
-    $this->SetY(-36);
-    $this->Cell(0, 14, "Page ". $this->getPage(), 0, 1, 'C', false, '', 
-		0, false, 'B', 'B');
   }
 
   public function __construct($title = "Draft CQP Report") {
     parent::__construct('P','pt','LETTER',true,'UTF-8',false,false);
+    $this->SetAutoPageBreak(true, 36);
     $this->SetCreator(PDF_CREATOR);
     $this->SetAuthor('Northern California Contest Club');
     $this->SetTitle($title);
@@ -320,7 +405,6 @@ $top_youth = array();
 $top_dx = array();
 $top_school = array();
 $top_rookie = array();
-$top_mobile = array();
 $top_single_ssb = array();
 $top_single_cw = array();
 
@@ -496,6 +580,7 @@ $topms[] = $ent;
 $ent = new Entry("N6O", array("K3EST", "K6AW", "N6BV", "N6RO", "WA6O"),
 		 1679, 3275, 58, 672133, "M/M", "ALAM", "Alameda");
 $ent->SetStationCall("N6RO");
+# $top_mobile = new MobileEntry($ent, 1679, 21, false);
 $topmm_ca[] = $ent;
 
 $ent = new Entry("K6Z", array("K6ZZ", "W6PH", "KI6VC", "K6VR", "W1MD", "WA1Z", "N6WIN", "N6KZ"), 1603, 3265, 58, 657749, "M/M E", "INYO", "Inyo");
@@ -539,9 +624,10 @@ $ent = new Entry("W6GMP", array(), 0, 429, 56, 48104, "L", "SONO", "Sonoma");
 $top_rookie[] = $ent;
 
 $ent = new Entry("K6AQL", array("K0DI"), 1254, 0, 23, 1000, "M", "SCLA", "Santa Clara");
-$top_mobile[] = $ent;
+$top_mobile = new MobileEntry($ent, 1254, 24, false);
 
 $ent = new Entry("K1ZZI", array(), 480, 0, 54, 77679, "", "GA", "Georgia");
+$ent->SetNewRecord();
 $top_single_cw[] = $ent;
 
 $cats = array();
