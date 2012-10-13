@@ -195,3 +195,6 @@ insert into CLUB (NAME, LOCATION) values ('WY DXCC', 'OCA');
 insert into CLUB (NAME, LOCATION) values ('YANKEE CLIPPER CONTEST CLUB', 'OCA');
 insert into CLUB (NAME, LOCATION) values ('YAVAPAI ARC', 'OCA');
 insert into CLUB (NAME, LOCATION) values ('YO DX CLUB', 'OCA');
+insert INTO CLUB (NAME, LOCATION) values ('RIO DX GROUP', 'OCA');
+insert into CLUB (NAME, LOCATION) values ('MADISON COUNTY ARC', 'OCA');
+

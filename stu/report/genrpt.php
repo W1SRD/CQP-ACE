@@ -12,9 +12,6 @@ date_default_timezone_set('UTC');
 // Globals
 
 $HEAD = file_get_contents("rpthead.html");
-$HEAD = preg_replace("/Logs Received Page/", "Logs Received - " . gmdate("d-M-Y  H:i:s e"), $HEAD);
-
-
 $BODY = '';
 $TAIL = file_get_contents("rptend.html");
 
@@ -134,6 +131,11 @@ try {
     }
     $BODY .= "</tr>\n";
   }
+ 
+  // Build title for page...
+  $HEAD = preg_replace("/Logs Received Page/", 
+                       "Logs Received = " . $nlogs ."  (" . gmdate("d-M-Y  H:i:s e") . ")",
+                       $HEAD);
 
   file_put_contents("report.html", $HEAD . $BODY . $TAIL);
   pd("Report Generated");

@@ -159,6 +159,13 @@ while (1) {
         break;
       }
 
+      if (!CabCheckQDates($log, CQPSTART, CQPEND)) {
+        // Dammed if the dates in the log aren't within the window
+        // of this year's contest...
+        $needHuman = CQPDATEERROR;
+        break;
+      }
+
       $call = CabGetCall($log);
       $fname = MakeLogName($call);
 
@@ -183,13 +190,6 @@ while (1) {
       $CQPF = CabCrack($msg['FROM'], $fname, $log);
       if (!$CQPF) {
         $needHuman = NOTCQPCONTEST;
-        break;
-      }
-
-      if (!CabCheckQDates($log, CQPSTART, CQPEND)) {
-        // Dammed if the dates in the log aren't within the window
-        // of this year's contest...
-        $needHuman = CQPDATEERROR;
         break;
       }
 

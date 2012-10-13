@@ -281,6 +281,9 @@ insert into CLUB_ALIAS (ALIAS, CLUB_NAME) values ('YANKEE CLIPPER CONTEST CLUB',
 insert into CLUB_ALIAS (ALIAS, CLUB_NAME) values ('YAVAPAI ARC', 'YAVAPAI ARC');
 insert into CLUB_ALIAS (ALIAS, CLUB_NAME) values ('YCCC', 'YANKEE CLIPPER CONTEST CLUB');
 insert into CLUB_ALIAS (ALIAS, CLUB_NAME) values ('YO DX CLUB', 'YO DX CLUB');
+insert into CLUB_ALIAS (ALIAS, CLUB_NAME) values ('RIO DX GROUP', 'RIO DX GROUP');
+insert into CLUB_ALIAS (ALIAS, CLUB_NAME) values ('MADISON COUNTY ARC', 'MADISON COUNTY ARC');
+
 --
 -- now update all the CLUB_ID references in CLUB_ALIAS to the matching
 -- record in CLUB

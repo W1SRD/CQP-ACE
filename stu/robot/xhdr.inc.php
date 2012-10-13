@@ -83,6 +83,7 @@ function _xhdr_parseCatToken($t) {
     case 'SINGLE-OP':
     case 'SINGLE-OPERATOR':
     case 'SINGLE-':
+    case 'SINGLE':
     case 'SO':
       $_xhdr_CQPF[':operator_category'] = 'SINGLE-OP';
       break;
@@ -93,24 +94,28 @@ function _xhdr_parseCatToken($t) {
       break;
 
     case 'SO-LP':
+    case 'SOLP':
     case '(SO-LP)':
     case 'SINGLE-OPERATOR-LOW':
       $_xhdr_CQPF[':operator_category'] = 'SINGLE-OP';
       $_xhdr_CQPF[':power_category'] = 'LOW';
       break;
 
+    case 'SOHP':
     case 'SO-HP':
     case 'SINGLE-OP-HIGH-MIXED':
       $_xhdr_CQPF[':operator_category'] = 'SINGLE-OP';
       $_xhdr_CQPF[':power_category'] = 'HIGH';
       break;
  
+    case 'MSHP':
     case 'MS-HP':
     case '(MS-HP)':
       $_xhdr_CQPF[':operator_category'] = 'MULTI-SINGLE';
       $_xhdr_CQPF[':power_category'] = 'HIGH';
       break;
 
+    case 'MSLP':
     case 'MS-LP':
       $_xhdr_CQPF[':operator_category'] = 'MULTI-SINGLE';
       $_xhdr_CQPF[':power_category'] = 'LOW';
@@ -306,7 +311,7 @@ function XHDRcrack() {
   
   // Validate this is a Cabrillo file - version 2 or 3 - doesn't matter
   $l = _xhdr_getl();
-  if (!preg_match("/^START-OF-LOG: /", $l)) {
+  if (!preg_match("/^START-OF-LOG:/", $l)) {
     error_log("  Not a Cabrillo file\n");
     return (array());
   }
