@@ -3,7 +3,7 @@
 require 'mysql'
 
 NUMLOGS = 1000
-NUMQSOS = 500
+NUMQSOS = 100000
 NUMALLMULTS = 5
 
 CALLSIGNS = [ "2E0ZRQ",
@@ -1587,14 +1587,18 @@ CALLSIGNS = [ "2E0ZRQ",
               "ZW5B",
               "ZY7C"]
 
-db = Mysql.new("localhost", "dbtest", "dbtest", 'CQPACE')
+db = Mysql.new("localhost", "dbtest", "dbtest", 'CQPACE_test')
 db.query("delete from QSO")
 db.query("delete from LOG")
+res = db.query("select ID from QSO_STATUS where NAME='OK' LIMIT 1")
+if res.nil? or res.num_rows == 0
+  db.query("insert into QSO_STATUS (NAME) value ('OK')")
+end
 
 rng = Random.new
 
 def randomLocation(db)
-  rows = db.query("select NAME, TYPE from MULTIPLIER order by RAND() LIMIT 1")
+  rows = db.query("select NAME, TYPE from MULTIPLIER where NAME <> 'CA' order by RAND() LIMIT 1")
   results = rows.fetch_row
   return results[0], results[1]
 end
@@ -1625,7 +1629,7 @@ NUMLOGS.times {
 }
 
 # Ensure that every multiplier has at least one log entry
-result = db.query("select MULTIPLIER.NAME from MULTIPLIER left outer join LOG on MULTIPLIER.NAME = LOG.STATION_LOCATION where LOG.STATION_LOCATION is null")
+result = db.query("select MULTIPLIER.NAME from MULTIPLIER left outer join LOG on MULTIPLIER.NAME = LOG.STATION_LOCATION where LOG.STATION_LOCATION is null and MULTIPLIER.NAME <> 'CA'")
 result.each { |row|
   ind = rng.rand(working_copy.length)
   call = working_copy[ind]
@@ -1685,21 +1689,20 @@ def logCall(db, rng, call1, call2)
   band, frequency, mode = RandomContactDetails(rng)
   serialnum1 = CalcSerialNum(db, station1[0])
   serialnum2 = CalcSerialNum(db, station2[0])
-  db.query("insert into QSO (QSO_DATE, CALLSIGN_SENT, CALLSIGN_RECEIVED, FREQUENCY, BAND, MODE, SERIAL_SENT, SERIAL_RECEIVED, QTH_SENT, QTH_RECEIVED, LOG_ID, QSO_STATUS) values ('" + 
+  db.query("insert into QSO (QSO_DATE, CALLSIGN_SENT, CALLSIGN_RECEIVED, FREQUENCY, BAND, MODE, SERIAL_SENT, SERIAL_RECEIVED, QTH_SENT, QTH_RECEIVED, LOG_ID, QSO_STATUS) values (" + 
            time  +
-           "', '" + call1 + "', '" + call2 + "', " + frequency.to_s + ", '" +
+           ", '" + call1 + "', '" + call2 + "', " + frequency.to_s + ", '" +
            band + "', '" + mode + "', " + serialnum1.to_s + ", " + 
            serialnum2.to_s + ", '" + station1[1] + "', '" + 
-           station2[1] + "', " + station1[0] + ", 'OK'), ('" +
+           station2[1] + "', " + station1[0] + ", 'OK'), (" +
            time +
-           "', '" + call2 + "', '" + call1 + "', " + frequency.to_s + ", '" +
+           ", '" + call2 + "', '" + call1 + "', " + frequency.to_s + ", '" +
            band + "', '" + mode + "', " + serialnum2.to_s + ", " + 
            serialnum1.to_s + ", '" + station2[1] + "', '" + 
            station1[1] + "', " + station2[0] + ", 'OK')")
-
 end
 
-NUMQSOS.times {
+(NUMQSOS/2).times {
   result = db.query("SELECT LOG.ID, CALLSIGN, MULTIPLIER.TYPE from LOG, MULTIPLIER where LOG.STATION_LOCATION = MULTIPLIER.NAME order by RAND() limit 1");
   row = result.fetch_row
   call1 = row[1]
@@ -1728,7 +1731,7 @@ result.each { |row|
 # ensure that a few CA stations worked all states and provinces
 result = db.query("SELECT LOG.ID, CALLSIGN from LOG, MULTIPLIER where LOG.STATION_LOCATION = MULTIPLIER.NAME and MULTIPLIER.TYPE = 'COUNTY' order by RAND() limit " + NUMALLMULTS.to_s)
 result.each { |row|
-  missing = db.query("SELECT MULTIPLIER.NAME from MULTIPLIER where (MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE')")
+  missing = db.query("SELECT MULTIPLIER.NAME from MULTIPLIER where (MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE') AND NAME <> 'CA'")
   missing.each { |noqso|
     newqso = db.query("SELECT ID, CALLSIGN from LOG where LOG.STATION_LOCATION = '" +
                       noqso[0] + "' and ID != " + row[0] + 

@@ -16,28 +16,31 @@ define("VALIDQSO","(QSO.QSO_STATUS = 'OK')");
 $thisyear = date("Y");		/* getting the current year */
 
 $link = mysql_connect('localhost', 'dbtest', 'dbtest') or die("Connect not connect to database: " . mysql_error());
-mysql_select_db('CQPACE', $link) or die("Could not select database");
+mysql_select_db('CQPACE_test', $link) or die("Could not select database");
 
 // Create a temporary table to hold stats needed for the reports
-mysql_query("create temporary table SummaryStats (LOG_ID int primary key, CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs int, PHQSOs int, TotalScore int, TimeForAllMultipliers TIMEDATE)", $link);
+// mysql_query("create temporary table SummaryStats (LOG_ID int primary key, CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs int, PHQSOs int, TotalScore int, TimeForAllMultipliers DATETIME)", $link)  or die("Cannot create SummaryStats: " . mysql_error());
+mysql_query("delete from SummaryStats") or die("Cannot delete");
 
 // The purpose of this question is to select the logs that are:
 // 1.  Part of the appropriate contest
 // 2.  Part of this year's running
 // 3.  Identify whether it's an in-state entry
-$result = mysql_query("select ID, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER where CONTEST_YEAR = " . $thisyear .
-		      "and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECKLOG' and LOG.LOCATION = MULTIPLIER.NAME", $link);
+$result = mysql_query("select LOG.ID, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER where CONTEST_YEAR = " . $thisyear .
+  " and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECKLOG' and LOG.STATION_LOCATION = MULTIPLIER.NAME", $link);
 
 
 while ($line = mysql_fetch_row($result)) {
-  mysql_query("insert INTO SummaryStats (LOG_ID, InState) VALUES (". $line[0] . ", " . $line[1] . ")", $link);
+  mysql_query("insert INTO SummaryStats (LOG_ID, InState) VALUES (". $line[0] . ", " . $line[1] . ")", $link)   or die("Cannot insert into SummaryStats: " . mysql_error());
 }
 
 function CountMultipliers($multipliertest, $varname) {
   $result = mysql_query("select SummaryStats.LOG_ID, COUNT(distinct QSO.QTH_RECEIVED) FROM SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and QSO.LOG_ID = LOG.ID and MULTIPLIER.NAME = QSO.QTH_RECEIVED and " . $multipliertest . " and " . VALIDQSO . " group by SummaryStats.LOG_ID");
   while ($line = mysql_fetch_row($result)) {
-    mysql_query("update SummaryStats set " . $varname . " = " . $line[1] . " where LOG_ID = " . $line[0] . " limit 1");
+    mysql_query("update SummaryStats set " . $varname . " = " . $line[1] . " where LOG_ID = " . $line[0] . " limit 1")   or die("Cannot change SummaryStats: " . mysql_error());
   }
+  mysql_query("update SummaryStats set " . $varname . " = 0 where " . 
+    $varname . " is null");
 }
 
 CountMultipliers("MULTIPLIER.TYPE = 'COUNTY'", "CACounties");
@@ -46,23 +49,25 @@ CountMultipliers("(MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE')",
 
 // The state count does not include California yet, so add one if at least
 // 1 CA county was worked.
-mysql_query("update SummaryStats set StatesAndProvinces = StatesAndProvinces + 1 where CACounties > 0");
+mysql_query("update SummaryStats set StatesAndProvinces = StatesAndProvinces + 1 where CACounties > 0")    or die("Cannot fixed state count: " . mysql_error());
 
-mysql_query("update SummaryStats set Multipliers = StatesAndProvinces where InState");
-mysql_query("update SummaryStats set Multipliers = CACounties where not InState");
+mysql_query("update SummaryStats set Multipliers = StatesAndProvinces where InState")    or die("Cannot calculate multipliers: " . mysql_error());
+mysql_query("update SummaryStats set Multipliers = CACounties where not InState") or die("Cannot calculate multipliers: " . mysql_error());;
 
 function GetModeCounts($mode) {
-  $result = mysql_query("select SummaryStats.LOG_ID, COUNT(*) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.MODE = '" . $mode . "' and " . VALIDQSO);
+  $result = mysql_query("select SummaryStats.LOG_ID, COUNT(*) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID");
   while ($line = mysql_fetch_row($result)) {
     mysql_query("update SummaryStats set " . $mode . "QSOs = " . $line[1] . " where LOG_ID = " . $line[0] . " limit 1");
   }
+  mysql_query("update SummaryStats set " . $mode . "QSOs = 0 where " . $mode .
+      "QSOs is null");
 }
 
 GetModeCounts("CW");
 GetModeCounts("PH");
 
 // Calculate the total score based on information in the table
-mysql_query("update SummaryStats set TotalScore = Multipliers * (3*CWQSOs + 2*PHQSOs)");
+mysql_query("update SummaryStats set TotalScore = Multipliers * (3*CWQSOs + 2*PHQSOs)") or die("Calculate total score failed:" .  mysql_error());
 
 
 function BestTimeQuery($instatetest, $multipliertest) {
@@ -76,7 +81,7 @@ function BestTimeQuery($instatetest, $multipliertest) {
     // multiplier to be found
     if ($line[0] != $previd) {
       $previd = $line[0];
-      mysql_query("update SummaryStats set TimeForAllMultipliers = '" . $line[1] . "' where LOG_ID = " . $line[0] . " limit 1");
+mysql_query("update SummaryStats set TimeForAllMultipliers = '" . $line[2] . "' where LOG_ID = " . $line[0] . " limit 1") or die("Unable to update" . mysql_error());
     }
   }
 }
@@ -85,6 +90,11 @@ BestTimeQuery("SummaryStats.InState",
 	      "(MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE')");
 BestTimeQuery("NOT SummaryStats.InState",
 	      "MULTIPLIER.TYPE = 'COUNTY'");
+
+$res = mysql_query("select LOG.CALLSIGN, LOG.STATION_LOCATION, CACounties, StatesAndProvinces, Multipliers, InState, CWQSOs, PHQSOs, TotalScore, TimeForAllMultipliers from LOG, SummaryStats where LOG.ID = SummaryStats.LOG_ID order by TotalScore desc");
+while ($line = mysql_fetch_row($res)) {
+  fputcsv(STDOUT,$line);
+}
 
 // At this point, the intent is that every element of SummaryStats has its
 // correct value.
