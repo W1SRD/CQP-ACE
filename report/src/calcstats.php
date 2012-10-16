@@ -9,6 +9,7 @@
 //=============================================================
 // VALIDQSO should define all the requirements for a QSO to be considered
 // valid for a multiplier or a QSO
+require_once('report_html.php');
 define("VALIDQSO","(QSO.QSO_STATUS = 'OK')");
 
 // Calculate a report for this year's running of the CQP. This could
@@ -27,7 +28,7 @@ mysql_query("create temporary table SummaryStats (LOG_ID int primary key, CACoun
 // 2.  Part of this year's running
 // 3.  Identify whether it's an in-state entry
 $result = mysql_query("select LOG.ID, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER where CONTEST_YEAR = " . $thisyear .
-  " and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECKLOG' and LOG.STATION_LOCATION = MULTIPLIER.NAME", $link);
+  " and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECK' and LOG.STATION_LOCATION = MULTIPLIER.NAME", $link);
 
 
 while ($line = mysql_fetch_row($result)) {
@@ -91,10 +92,145 @@ BestTimeQuery("SummaryStats.InState",
 BestTimeQuery("NOT SummaryStats.InState",
 	      "MULTIPLIER.TYPE = 'COUNTY'");
 
+function EntryClassStr($line) {
+  $ecs = "";
+  if (strcmp($line[1], "MULTI-MULTI") == 0) {
+    $ecs = "M/M";
+  }
+  else if (strcmp($line[1], "MULTI-SINGLE") == 0) {
+    $ecs = "M/S";
+  }
+  /* else if (strcmp($line[1], "SINGLE-OP") == 0) { */
+  /*   $ecs = "S"; */
+  /* } */
+  /* else if (strcmp($line[1], "CHECK") == 0) { */
+  /*   $ecs = "C"; */
+  /* } */
+  if (strcmp($line[7],"LOW") == 0) {
+    $ecs = $ecs . " L";
+  }
+  else if (strcmp($line[7], "QRP") == 0) {
+    $ecs = $ecs . " Q";
+  }
+  if (strcmp($line[9], "CCE") == 0) {
+    $ecs = $ecs . " E";
+  }
+  return trim($ecs);
+}
+
+
+$cats = array();
+$prevcat = '';
+$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'COUNTY' order by LOG.STATION_LOCATION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+if ($res) {
+  while ($line = mysql_fetch_row($res)) {
+    if (strcmp($line[0], $prevcat)) {
+      if (isset($cat)) {
+	$cats[] = $cat;
+      }
+      $prevcat = $line[0];
+      $cat = new EntryCategory($line[8]);
+    }
+    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
+		     intval($line[6]), intval($line[2]), EntryClassStr($line), 
+		     $line[0], $line[8]);
+    $cat->AddEntry($ent);
+  }
+  if (isset($cat)) {
+    $cats[] = $cat;
+    unset($cat);
+  }
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Draft Results (CA)");
+  $pdf->ReportCategories($cats);
+  $pdf->Output("CA_report_draft.pdf", "F");
+}
+else {
+  print "Report query failed: " . mysql_error() . "\n";
+}
+
+$cats = array();
+$prevcat = '';
+$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'STATE' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+if ($res) {
+  while ($line = mysql_fetch_row($res)) {
+    if (strcmp($line[0], $prevcat)) {
+      if (isset($cat)) {
+	$cats[] = $cat;
+      }
+      $prevcat = $line[0];
+      $cat = new EntryCategory($line[8]);
+    }
+    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
+		     intval($line[6]), intval($line[2]), EntryClassStr($line), 
+		     $line[0], $line[8]);
+    $cat->AddEntry($ent);
+  }
+  if (isset($cat)) {
+    $cats[] = $cat;
+    unset($cat);
+  }
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Draft Results (US)");
+  $pdf->ReportCategories($cats);
+  $pdf->Output("US_report_draft.pdf", "F");
+}
+
+$cats = array();
+$prevcat = '';
+$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'PROVINCE' order by MULTIPLIER.DESCRIPTION  asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+if ($res) {
+  while ($line = mysql_fetch_row($res)) {
+    if (strcmp($line[0], $prevcat)) {
+      if (isset($cat)) {
+	$cats[] = $cat;
+      }
+      $prevcat = $line[0];
+      $cat = new EntryCategory($line[8]);
+    }
+    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
+		     intval($line[6]), intval($line[2]),
+		     EntryClassStr($line), $line[0], $line[8]);
+    $cat->AddEntry($ent);
+  }
+  if (isset($cat)) {
+    $cats[] = $cat;
+    unset($cat);
+  }
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Canadian Draft Results");
+  $pdf->ReportCategories($cats);
+  $pdf->Output("Canadian_report_draft.pdf", "F");
+}
+
+$cats = array();
+$prevcat = '';
+$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'DX' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+if ($res) {
+  while ($line = mysql_fetch_row($res)) {
+    if (strcmp($line[0], $prevcat)) {
+      if (isset($cat)) {
+	$cats[] = $cat;
+      }
+      $prevcat = $line[0];
+      $cat = new EntryCategory($line[8]);
+    }
+    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
+		     intval($line[6]), intval($line[2]),
+		     EntryClassStr($line), $line[0], $line[8]);
+    $cat->AddEntry($ent);
+  }
+  if (isset($cat)) {
+    $cats[] = $cat;
+    unset($cat);
+  }
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  DX Draft Results");
+  $pdf->ReportCategories($cats);
+  $pdf->Output("DX_report_draft.pdf", "F");
+}
+
 $res = mysql_query("select LOG.CALLSIGN, LOG.STATION_LOCATION, CACounties, StatesAndProvinces, Multipliers, InState, CWQSOs, PHQSOs, TotalScore, TimeForAllMultipliers from LOG, SummaryStats where LOG.ID = SummaryStats.LOG_ID order by TotalScore desc");
 while ($line = mysql_fetch_row($res)) {
   fputcsv(STDOUT,$line);
 }
+
 
 // At this point, the intent is that every element of SummaryStats has its
 // correct value.

@@ -3,7 +3,7 @@
 require 'mysql'
 
 NUMLOGS = 1000
-NUMQSOS = 100000
+NUMQSOS = 150000
 NUMALLMULTS = 5
 
 CALLSIGNS = [ "2E0ZRQ",
@@ -1603,15 +1603,23 @@ def randomLocation(db)
   return results[0], results[1]
 end
 
+def randomOpCategory(rng)
+  if (rng.rand(100) >= 98) 
+    return "CHECK"
+  end
+  cats = [ 'SINGLE-OP', 'MULTI-MULTI', 'MULTI-SINGLE' ]
+  return cats[rng.rand(cats.length)]
+end
+
 def randomCategory(db, cat)
   rows = db.query("select NAME from " + cat + "_CATEGORY order by RAND() LIMIT 1");
   results = rows.fetch_row
   return results[0]
 end
 
-def addLocation(db, callsign, location)
+def addLocation(db, callsign, location, rng)
   db.query("insert into LOG (CALLSIGN, CONTEST_NAME, CONTEST_YEAR, STATION_LOCATION, OPERATOR_CATEGORY, POWER_CATEGORY, STATION_CATEGORY, TRANSMITTER_CATEGORY, SUBMISSION_DATE, OVERLAY_YL, OVERLAY_YOUTH, OVERLAY_NEW_CONTESTER) values (\"" + callsign + "\", 'CA-QSO-PARTY', 2012, \"" + 
-           location + "\", '" + randomCategory(db, "OPERATOR") + "', '" + 
+           location + "\", '" + randomOpCategory(rng) + "', '" + 
            randomCategory(db, "POWER") + "', '" + 
            randomCategory(db, "STATION") + "', '" +
            randomCategory(db, "TRANSMITTER") + "', NOW(), RAND() < 0.08, RAND() < 0.05, RAND() < 0.05)");
@@ -1625,7 +1633,7 @@ NUMLOGS.times {
   used_signs.push(call)
   working_copy.delete_at(ind)
   name, type = randomLocation(db)
-  addLocation(db, call, name)
+  addLocation(db, call, name, rng)
 }
 
 # Ensure that every multiplier has at least one log entry
@@ -1635,7 +1643,7 @@ result.each { |row|
   call = working_copy[ind]
   used_signs.push(call)
   working_copy.delete_at(ind)
-  addLocation(db, call, row[0])
+  addLocation(db, call, row[0], rng)
 }
 
 def RandomContactDetails(rng)
