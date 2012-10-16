@@ -19,8 +19,8 @@ $link = mysql_connect('localhost', 'dbtest', 'dbtest') or die("Connect not conne
 mysql_select_db('CQPACE_test', $link) or die("Could not select database");
 
 // Create a temporary table to hold stats needed for the reports
-// mysql_query("create temporary table SummaryStats (LOG_ID int primary key, CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs int, PHQSOs int, TotalScore int, TimeForAllMultipliers DATETIME)", $link)  or die("Cannot create SummaryStats: " . mysql_error());
-mysql_query("delete from SummaryStats") or die("Cannot delete");
+mysql_query("create temporary table SummaryStats (LOG_ID int primary key, CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs int, PHQSOs int, TotalScore int, TimeForAllMultipliers DATETIME)", $link)  or die("Cannot create SummaryStats: " . mysql_error());
+// mysql_query("delete from SummaryStats") or die("Cannot delete");
 
 // The purpose of this question is to select the logs that are:
 // 1.  Part of the appropriate contest
