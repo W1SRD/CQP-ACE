@@ -22,7 +22,7 @@ class NCCCReportPDF extends TCPDF {
   protected $baseline_skip = 16;
   protected $fontsize = 12;
   //  protected $columnwidths = [250, 45, 45, 45, 45, 65, 45];
-  protected $columnwidths = [41, 8, 8, 8, 8, 15, 12];
+  protected $columnwidths = [39, 8, 8, 8, 8, 15, 14];
   protected $columnheadings = ["", "CW", "PH", "Total", "Mult", "Score", "Type"];
   protected $footnotes = array();
 
