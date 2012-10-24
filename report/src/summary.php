@@ -127,7 +127,7 @@ class NCCCSummaryPDF extends TCPDF {
     } // 220
     $margins = $this->getMargins();
     if ($this->GetStringWidth($testresult,'helvetica','B', $this->fontsize) <=
-	$colwidth) {
+	0.93*$colwidth) {
       return array($result, "");
     }
     return array($entry->GetCallSign().$footnotestr.

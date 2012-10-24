@@ -110,7 +110,7 @@ class NCCCReportPDF extends TCPDF {
       $result = $entry->GetCallSign() . " (" . ($includesstation ? "+ " : "") .
 	$opslist . ")";
     }
-    if ($this->GetStringWidth($result) <= $this->columnwidths[0]) {
+    if ($this->GetStringWidth($result) <= 0.93*$this->columnwidths[0]) {
       return array($result, "");
     }
     return array($entry->GetCallSign(), $entry->GetCallSign() . " ops = " .

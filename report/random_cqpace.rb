@@ -1588,6 +1588,7 @@ CALLSIGNS = [ "2E0ZRQ",
               "ZY7C"]
 
 db = Mysql.new("localhost", "dbtest", "dbtest", 'CQPACE_test')
+db.query("delete from OPERATOR")
 db.query("delete from QSO")
 db.query("delete from LOG")
 res = db.query("select ID from QSO_STATUS where NAME='OK' LIMIT 1")
@@ -1604,11 +1605,15 @@ def randomLocation(db)
 end
 
 def randomOpCategory(rng)
-  if (rng.rand(100) >= 98) 
+  rnd = rng.rand(100)
+  if (rnd >= 98)
     return "CHECK"
+  elsif (rnd >= 92)
+    return "MULTI-MULTI"
+  elsif (rnd >= 87)
+    return "MULTI-SINGLE"
   end
-  cats = [ 'SINGLE-OP', 'MULTI-MULTI', 'MULTI-SINGLE' ]
-  return cats[rng.rand(cats.length)]
+  return "SINGLE-OP"
 end
 
 def randomCategory(db, cat)
@@ -1617,23 +1622,46 @@ def randomCategory(db, cat)
   return results[0]
 end
 
-def addLocation(db, callsign, location, rng)
+def insertExtraOps(db, rng, availcalls, numops, callsign)
+  id = (db.query("select last_insert_id()").fetch_row[0]).to_i
+  numops.times {
+    ind = rng.rand(availcalls.length)
+    db.query("insert into OPERATOR (CALLSIGN, LOG_ID) values (\"" + availcalls[ind] +
+             "\", " + id.to_s + ")");
+    availcalls.delete_at(ind)
+  }
+  if ((numops == 0) or ((numops == 2 or numops == 3) and rng.rand < 0.4))
+    db.query("insert into OPERATOR (CALLSIGN, LOG_ID) values (\"" + callsign +
+             "\", " + id.to_s + ")")
+  end
+end
+
+def addLocation(db, callsign, location, rng, availcalls)
+  opcat = randomOpCategory(rng)
   db.query("insert into LOG (CALLSIGN, CONTEST_NAME, CONTEST_YEAR, STATION_LOCATION, OPERATOR_CATEGORY, POWER_CATEGORY, STATION_CATEGORY, TRANSMITTER_CATEGORY, SUBMISSION_DATE, OVERLAY_YL, OVERLAY_YOUTH, OVERLAY_NEW_CONTESTER) values (\"" + callsign + "\", 'CA-QSO-PARTY', 2012, \"" + 
-           location + "\", '" + randomOpCategory(rng) + "', '" + 
+           location + "\", '" + opcat + "', '" + 
            randomCategory(db, "POWER") + "', '" + 
            randomCategory(db, "STATION") + "', '" +
            randomCategory(db, "TRANSMITTER") + "', NOW(), RAND() < 0.08, RAND() < 0.05, RAND() < 0.05)");
+  if /MULTI/ =~ opcat
+    insertExtraOps(db, rng, availcalls, 2+rng.rand(4), callsign)
+  elsif (opcat == "SINGLE-OP" and rng.rand < 0.05)
+    insertExtraOps(db, rng, availcalls, 1, callsign)
+  elsif (rng.rand < 0.1)
+    insertExtraOps(db, rng, availcalls, 0, callsign)
+  end
 end
 
 working_copy = CALLSIGNS.uniq
 used_signs = Array.new
 NUMLOGS.times { 
+  print working_copy.length.to_s + "\n"
   ind = rng.rand(working_copy.length)
   call = working_copy[ind]
   used_signs.push(call)
   working_copy.delete_at(ind)
   name, type = randomLocation(db)
-  addLocation(db, call, name, rng)
+  addLocation(db, call, name, rng, working_copy)
 }
 
 # Ensure that every multiplier has at least one log entry

@@ -121,10 +121,24 @@ function EntryClassStr($line) {
   return trim($ecs);
 }
 
+define("ENTRY_QUERY_STRING", "select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL, LOG.ID, TimeForAllMultipliers");
+
+function EntryFromRow($row)
+{
+  $operators = array();
+  $opquery = mysql_query("select OPERATOR.CALLSIGN from OPERATOR where LOG_ID = " . $row[11]);
+  while ($opline = mysql_fetch_row($opquery)) {
+    $operators[] = $opline[0];
+  }
+  return new Entry($row[3], $operators, intval($row[4]), intval($row[5]),
+		   intval($row[6]), intval($row[2]), EntryClassStr($row), 
+		   $row[0], $row[8]);
+}
+
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'COUNTY' order by LOG.STATION_LOCATION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'COUNTY' order by LOG.STATION_LOCATION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -134,9 +148,7 @@ if ($res) {
       $prevcat = $line[0];
       $cat = new EntryCategory($line[8]);
     }
-    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
-		     intval($line[6]), intval($line[2]), EntryClassStr($line), 
-		     $line[0], $line[8]);
+    $ent = EntryFromRow($line);
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -153,7 +165,7 @@ else {
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'STATE' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'STATE' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -163,9 +175,7 @@ if ($res) {
       $prevcat = $line[0];
       $cat = new EntryCategory($line[8]);
     }
-    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
-		     intval($line[6]), intval($line[2]), EntryClassStr($line), 
-		     $line[0], $line[8]);
+    $ent = EntryFromRow($line);
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -179,7 +189,7 @@ if ($res) {
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'PROVINCE' order by MULTIPLIER.DESCRIPTION  asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'PROVINCE' order by MULTIPLIER.DESCRIPTION  asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -189,9 +199,7 @@ if ($res) {
       $prevcat = $line[0];
       $cat = new EntryCategory($line[8]);
     }
-    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
-		     intval($line[6]), intval($line[2]),
-		     EntryClassStr($line), $line[0], $line[8]);
+    $ent = EntryFromRow($line);
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -205,7 +213,7 @@ if ($res) {
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query("select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'DX' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'DX' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -215,9 +223,7 @@ if ($res) {
       $prevcat = $line[0];
       $cat = new EntryCategory($line[8]);
     }
-    $ent = new Entry($line[3], array(), intval($line[4]), intval($line[5]),
-		     intval($line[6]), intval($line[2]),
-		     EntryClassStr($line), $line[0], $line[8]);
+    $ent = EntryFromRow($line);
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -229,10 +235,10 @@ if ($res) {
   $pdf->Output("DX_report_draft.pdf", "F");
 }
 
-$res = mysql_query("select LOG.CALLSIGN, LOG.STATION_LOCATION, CACounties, StatesAndProvinces, Multipliers, InState, CWQSOs, PHQSOs, TotalScore, TimeForAllMultipliers from LOG, SummaryStats where LOG.ID = SummaryStats.LOG_ID order by TotalScore desc");
-while ($line = mysql_fetch_row($res)) {
-  fputcsv(STDOUT,$line);
-}
+//$res = mysql_query("select LOG.CALLSIGN, LOG.STATION_LOCATION, CACounties, StatesAndProvinces, Multipliers, InState, CWQSOs, PHQSOs, TotalScore, TimeForAllMultipliers from LOG, SummaryStats where LOG.ID = SummaryStats.LOG_ID order by TotalScore desc");
+//while ($line = mysql_fetch_row($res)) {
+//  fputcsv(STDOUT,$line);
+//}
 
 
 // At this point, the intent is that every element of SummaryStats has its

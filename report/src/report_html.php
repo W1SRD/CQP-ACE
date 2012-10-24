@@ -145,7 +145,7 @@ class NCCCReportPDF extends TCPDF {
 	 ? (" @" . $entry->GetStationCall()) : "") .
 	")";
     } // 220
-    if ($this->GetStringWidth($testresult) <= 0.98*$this->columnwidths[0]/100*72*7.5) {
+    if ($this->GetStringWidth($testresult) <= 0.93*$this->columnwidths[0]/100*72*7.5) {
       return array($result, "");
     }
     return array($entry->GetCallSign().$footnotestr.
