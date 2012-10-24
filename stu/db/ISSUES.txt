@@ -2,6 +2,9 @@ When issues are resolved, move them down below the second heading.
 
 List of unresolved issues
 =========================
+* We need a database field presumably in the LOG table to hold the station owner. For example,
+  N6WM @K6LRG
+  there is currently no location in the database to store K6LRG.
 * Do the # of CW, Phone, and Total QSOs need to be stored in the DB or
   recalculated.
 * Do the # of mults need to be stored or are they easily generated.
