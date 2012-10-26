@@ -1674,6 +1674,17 @@ result.each { |row|
   addLocation(db, call, row[0], rng)
 }
 
+# Add some station owners in the database
+idary = db.query("SELECT MIN(LOG.ID), MAX(LOG.ID) from LOG").fetch_row.collect { |i| i.to_i }
+idrange = idary.min..idary.max
+[ 50, working_copy.length].min.times {
+  ind = rng.rand(working_copy.length)
+  db.query("update LOG set STATION_OWNER_CALLSIGN = \"" + working_copy[ind] +
+           "\" where ID = " +
+           rng.rand(idrange).to_s + " limit 1")
+  working_copy.delete_at(ind)
+}
+
 def RandomContactDetails(rng)
   bands = ["160", "80", "40", "20", "15", "10", "6"]
   bandprobabilities = { "160" => 12,
