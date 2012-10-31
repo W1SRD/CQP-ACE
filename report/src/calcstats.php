@@ -20,25 +20,29 @@ $link = mysql_connect('localhost', 'dbtest', 'dbtest') or die("Connect not conne
 mysql_select_db('CQPACE_test', $link) or die("Could not select database");
 
 // Create a temporary table to hold stats needed for the reports
-mysql_query("create temporary table SummaryStats (LOG_ID int primary key, CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs int, PHQSOs int, TotalScore int, TimeForAllMultipliers DATETIME)", $link)  or die("Cannot create SummaryStats: " . mysql_error());
+mysql_query("create temporary table SummaryStats (LOG_ID int, LOCATION VARCHAR(4), CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs int, PHQSOs int, TotalScore int, TimeForAllMultipliers DATETIME, PRIMARY KEY (LOG_ID, LOCATION))", $link)  or die("Cannot create SummaryStats: " . mysql_error());
 // mysql_query("delete from SummaryStats") or die("Cannot delete");
 
 // The purpose of this question is to select the logs that are:
 // 1.  Part of the appropriate contest
 // 2.  Part of this year's running
 // 3.  Identify whether it's an in-state entry
-$result = mysql_query("select LOG.ID, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER where CONTEST_YEAR = " . $thisyear .
-  " and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECK' and LOG.STATION_LOCATION = MULTIPLIER.NAME", $link);
+$result = mysql_query("select distinct LOG.ID, QSO.QTH_SENT, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER, QSO where CONTEST_YEAR = " . $thisyear .
+  " and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECK' and QSO.QTH_SENT = MULTIPLIER.NAME and QSO.LOG_ID = LOG.ID", $link);
 
-
-while ($line = mysql_fetch_row($result)) {
-  mysql_query("insert INTO SummaryStats (LOG_ID, InState) VALUES (". $line[0] . ", " . $line[1] . ")", $link)   or die("Cannot insert into SummaryStats: " . mysql_error());
+if ($result) {
+  while ($line = mysql_fetch_row($result)) {
+    mysql_query("insert INTO SummaryStats (LOG_ID, LOCATION, InState) VALUES (". $line[0] . ", \"" . $line[1] . "\", " . $line[2] . ")", $link)   or die("Cannot insert into SummaryStats: " . mysql_error());
+  }
+}
+else {
+  print "Query failed: " . mysql_error() . "\n";
 }
 
 function CountMultipliers($multipliertest, $varname) {
-  $result = mysql_query("select SummaryStats.LOG_ID, COUNT(distinct QSO.QTH_RECEIVED) FROM SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and QSO.LOG_ID = LOG.ID and MULTIPLIER.NAME = QSO.QTH_RECEIVED and " . $multipliertest . " and " . VALIDQSO . " group by SummaryStats.LOG_ID");
+  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, COUNT(distinct QSO.QTH_RECEIVED) FROM SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.LOG_ID = LOG.ID and MULTIPLIER.NAME = QSO.QTH_RECEIVED and " . $multipliertest . " and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
   while ($line = mysql_fetch_row($result)) {
-    mysql_query("update SummaryStats set " . $varname . " = " . $line[1] . " where LOG_ID = " . $line[0] . " limit 1")   or die("Cannot change SummaryStats: " . mysql_error());
+    mysql_query("update SummaryStats set " . $varname . " = " . $line[2] . " where LOG_ID = " . $line[0] . " and LOCATION = '" . $line[1] . "' limit 1")   or die("Cannot change SummaryStats: " . mysql_error());
   }
   mysql_query("update SummaryStats set " . $varname . " = 0 where " . 
     $varname . " is null");
@@ -56,9 +60,9 @@ mysql_query("update SummaryStats set Multipliers = StatesAndProvinces where InSt
 mysql_query("update SummaryStats set Multipliers = CACounties where not InState") or die("Cannot calculate multipliers: " . mysql_error());;
 
 function GetModeCounts($mode) {
-  $result = mysql_query("select SummaryStats.LOG_ID, COUNT(*) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID");
+  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, COUNT(*) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
   while ($line = mysql_fetch_row($result)) {
-    mysql_query("update SummaryStats set " . $mode . "QSOs = " . $line[1] . " where LOG_ID = " . $line[0] . " limit 1");
+    mysql_query("update SummaryStats set " . $mode . "QSOs = " . $line[2] . " where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1] . "' limit 1");
   }
   mysql_query("update SummaryStats set " . $mode . "QSOs = 0 where " . $mode .
       "QSOs is null");
@@ -73,17 +77,24 @@ mysql_query("update SummaryStats set TotalScore = Multipliers * (3*CWQSOs + 2*PH
 
 function BestTimeQuery($instatetest, $multipliertest) {
   // Calculate best time to 58 for class of stations
-  $result = mysql_query("select SummaryStats.LOG_ID, QSO.QTH_RECEIVED, MIN(QSO.QSO_DATE) as DATE from SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and " . $instatetest . " and LOG.ID = QSO.LOG_ID and SummaryStats.Multipliers = 58 and " . VALIDQSO . " and QSO.QTH_RECEIVED = MULTIPLIER.NAME and " . $multipliertest . " GROUP BY SummaryStats.LOG_ID, QSO.QTH_RECEIVED ORDER BY SummaryStats.LOG_ID asc, DATE desc");
+  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED, MIN(QSO.QSO_DATE) as DATE from SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and SummaryStats.LOCATION = QSO.QTH_SENT and " . $instatetest . " and LOG.ID = QSO.LOG_ID and SummaryStats.Multipliers = 58 and " . VALIDQSO . " and QSO.QTH_RECEIVED = MULTIPLIER.NAME and " . $multipliertest . " GROUP BY SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED ORDER BY SummaryStats.LOG_ID asc, SummaryStats.LOCATION asc, DATE desc");
 
-  $previd = -9999;
+  if ($result) {
+    $previd = -9999;
+    $prevloc = "";
 
-  while ($line = mysql_fetch_row($result)) {
-    // because of the order by, the first line for each id is the last
-    // multiplier to be found
-    if ($line[0] != $previd) {
-      $previd = $line[0];
-mysql_query("update SummaryStats set TimeForAllMultipliers = '" . $line[2] . "' where LOG_ID = " . $line[0] . " limit 1") or die("Unable to update" . mysql_error());
+    while ($line = mysql_fetch_row($result)) {
+      // because of the order by, the first line for each id is the last
+      // multiplier to be found
+      if (($line[0] != $previd) or (strcmp($line[1], $prevloc) != 0)) {
+	$previd = $line[0];
+	$prevloc = $line[1];
+	mysql_query("update SummaryStats set TimeForAllMultipliers = '" . $line[3] . "' where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1]. "' limit 1") or die("Unable to update" . mysql_error());
+      }
     }
+  }
+  else {
+    print "Query failed: " . mysql_error() . "\n";
   }
 }
 
@@ -115,13 +126,16 @@ function EntryClassStr($line) {
   if (strcmp($line[9], "CCE") == 0) {
     $ecs = $ecs . " E";
   }
+  if (strcmp($line[9], "MOBILE") == 0) {
+    $ecs = $ecs . " M";
+  }
   if ($line[10] != 0) {
     $ecs = $ecs . " YL";
   }
   return trim($ecs);
 }
 
-define("ENTRY_QUERY_STRING", "select LOG.STATION_LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL, LOG.ID, TimeForAllMultipliers, STATION_OWNER_CALLSIGN");
+define("ENTRY_QUERY_STRING", "select SummaryStats.LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL, LOG.ID, TimeForAllMultipliers, STATION_OWNER_CALLSIGN");
 
 function EntryFromRow($row)
 {
@@ -142,7 +156,7 @@ function EntryFromRow($row)
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'COUNTY' order by LOG.STATION_LOCATION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID  and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'COUNTY' order by SummaryStats.LOCATION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -169,7 +183,7 @@ else {
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'STATE' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'STATE' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -193,7 +207,7 @@ if ($res) {
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'PROVINCE' order by MULTIPLIER.DESCRIPTION  asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'PROVINCE' order by MULTIPLIER.DESCRIPTION  asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -217,7 +231,7 @@ if ($res) {
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION and MULTIPLIER.TYPE = 'Country' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'Country' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -243,7 +257,7 @@ require_once('summary_lib.php');
 
 function QuerySummaryCat(&$cat, $querystr)
 {
-  $res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = LOG.STATION_LOCATION " . $querystr);
+  $res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION " . $querystr);
   if ($res) {
     while ($line = mysql_fetch_row($res)) {
       $cat->AddEntry(EntryFromRow($line));
@@ -253,6 +267,23 @@ function QuerySummaryCat(&$cat, $querystr)
     print "Mysql error: " . mysql_error() . "\n";
   }
   return $cat;
+}
+
+function QueryBestMobile()
+{
+  $res = mysql_query(ENTRY_QUERY_STRING . ", SUM(SummaryStats.PHQSOs + SummaryStats.CWQSOs) as TotalQSO from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and SummaryStats.LOCATION = MULTIPLIER.NAME and LOG.STATION_CATEGORY='MOBILE' group by LOG.ID order by TotalQSO desc limit 1");
+  if ($res) {
+    while ($line = mysql_fetch_row($res)) {
+      $ent = EntryFromRow($line);
+      $ncresult = mysql_query("select count(*) from SummaryStats where SummaryStats.LOG_ID = " . $line[11]);
+      $numcounty = mysql_fetch_row($ncresult);
+      $mobile = new MobileEntry($ent, intval($line[14]), intval($numcounty[0]));
+    }
+  }
+  else {
+    print "Mysql error: " . mysql_error() . "\n";
+  }
+  return $mobile;
 }
 
 
@@ -338,7 +369,7 @@ QuerySummaryCat($topnonca,
 		" and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 20");
 
 $pdf = new NCCCSummaryPDF("9999 California QSO Party (CQP) - Draft Summary Report");
-$pdf->LeftColumn($cats, NULL, $mostssb->GetEntries(), $mostcw->GetEntries());
+$pdf->LeftColumn($cats, QueryBestMobile(), $mostssb->GetEntries(), $mostcw->GetEntries());
 $pdf->RightColumn($topca, $topnonca, array(), array());
 
 $pdf->Output("summary_draft.pdf", "F");

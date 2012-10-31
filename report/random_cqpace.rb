@@ -1598,8 +1598,9 @@ end
 
 rng = Random.new
 
-def randomLocation(db)
-  rows = db.query("select NAME, TYPE from MULTIPLIER where NAME <> 'CA' order by RAND() LIMIT 1")
+def randomLocation(db, extraconst = "")
+  rows = db.query("select NAME, TYPE from MULTIPLIER where NAME <> 'CA' " +
+                  extraconst + " order by RAND() LIMIT 1")
   results = rows.fetch_row
   return results[0], results[1]
 end
@@ -1617,7 +1618,7 @@ def randomOpCategory(rng)
 end
 
 def randomCategory(db, cat)
-  rows = db.query("select NAME from " + cat + "_CATEGORY order by RAND() LIMIT 1");
+  rows = db.query("select NAME from " + cat + "_CATEGORY where NAME <> 'MOBILE' order by RAND() LIMIT 1");
   results = rows.fetch_row
   return results[0]
 end
@@ -1636,12 +1637,15 @@ def insertExtraOps(db, rng, availcalls, numops, callsign)
   end
 end
 
-def addLocation(db, callsign, location, rng, availcalls)
+def addLocation(db, callsign, location, rng, availcalls, cat = nil)
   opcat = randomOpCategory(rng)
+  if not cat 
+    cat = randomCategory(db, "STATION")
+  end
   db.query("insert into LOG (CALLSIGN, CONTEST_NAME, CONTEST_YEAR, STATION_LOCATION, OPERATOR_CATEGORY, POWER_CATEGORY, STATION_CATEGORY, TRANSMITTER_CATEGORY, SUBMISSION_DATE, OVERLAY_YL, OVERLAY_YOUTH, OVERLAY_NEW_CONTESTER) values (\"" + callsign + "\", 'CA-QSO-PARTY', 2012, \"" + 
            location + "\", '" + opcat + "', '" + 
            randomCategory(db, "POWER") + "', '" + 
-           randomCategory(db, "STATION") + "', '" +
+           cat + "', '" +
            randomCategory(db, "TRANSMITTER") + "', NOW(), RAND() < 0.08, RAND() < 0.05, RAND() < 0.05)");
   if /MULTI/ =~ opcat
     insertExtraOps(db, rng, availcalls, 2+rng.rand(4), callsign)
@@ -1671,7 +1675,18 @@ result.each { |row|
   call = working_copy[ind]
   used_signs.push(call)
   working_copy.delete_at(ind)
-  addLocation(db, call, row[0], rng)
+  addLocation(db, call, row[0], rng, working_copy)
+}
+
+8.times {
+  print working_copy.length.to_s + "\n"
+  ind = rng.rand(working_copy.length)
+  call = working_copy[ind]
+  used_signs.push(call)
+  working_copy.delete_at(ind)
+  name, type = randomLocation(db, " and TYPE = 'COUNTY'")
+  db.query("insert into LOG (CALLSIGN, CONTEST_NAME, CONTEST_YEAR, STATION_LOCATION, OPERATOR_CATEGORY, POWER_CATEGORY, STATION_CATEGORY, TRANSMITTER_CATEGORY, SUBMISSION_DATE, OVERLAY_YL, OVERLAY_YOUTH, OVERLAY_NEW_CONTESTER) values (\"" +
+           call + "\", 'CA-QSO-PARTY', 2012, \"" + name + "\", 'SINGLE-OP', 'LOW', 'MOBILE', 'ONE', NOW(),  RAND() < 0.08, RAND() < 0.05, RAND() < 0.05)")
 }
 
 # Add some station owners in the database
@@ -1722,31 +1737,41 @@ end
 def CalcSerialNum(db, id)
   result = 1
   rows = db.query("select MAX(SERIAL_SENT) from QSO where LOG_ID = " +
-                  id.to_s);
+                  id.to_s + " group by LOG_ID LIMIT 1");
   rows.each { |r|
-    result  = r[1].to_i + 1
+    result  = r[0].to_i + 1
   }
   return result
 end
 
+def stationLocation(db, station_info, num)
+  if (num <= 1 or station_info[2] != "MOBILE") # first QSO always at home
+    return station_info[1]
+  else
+    return db.query("SELECT NAME from MULTIPLIER where TYPE='COUNTY' order by RAND() LIMIT 1").fetch_row[0]
+  end
+end
+
 def logCall(db, rng, call1, call2)
   time = "DATE_ADD(\"2012-10-06 16:00:00\", INTERVAL " + rng.rand(1440).to_s + " MINUTE)"
-  station1 = db.query("SELECT ID, STATION_LOCATION from LOG where CALLSIGN=\"" + call1 + "\" LIMIT 1").fetch_row
-  station2 = db.query("SELECT ID, STATION_LOCATION from LOG where CALLSIGN=\"" + call2 + "\" LIMIT 1").fetch_row
+  station1 = db.query("SELECT ID, STATION_LOCATION, STATION_CATEGORY from LOG where CALLSIGN=\"" + call1 + "\" LIMIT 1").fetch_row
+  station2 = db.query("SELECT ID, STATION_LOCATION, STATION_CATEGORY from LOG where CALLSIGN=\"" + call2 + "\" LIMIT 1").fetch_row
   band, frequency, mode = RandomContactDetails(rng)
   serialnum1 = CalcSerialNum(db, station1[0])
   serialnum2 = CalcSerialNum(db, station2[0])
+  loc1 = stationLocation(db, station1, serialnum1)
+  loc2 = stationLocation(db, station2, serialnum2)
   db.query("insert into QSO (QSO_DATE, CALLSIGN_SENT, CALLSIGN_RECEIVED, FREQUENCY, BAND, MODE, SERIAL_SENT, SERIAL_RECEIVED, QTH_SENT, QTH_RECEIVED, LOG_ID, QSO_STATUS) values (" + 
            time  +
            ", '" + call1 + "', '" + call2 + "', " + frequency.to_s + ", '" +
            band + "', '" + mode + "', " + serialnum1.to_s + ", " + 
-           serialnum2.to_s + ", '" + station1[1] + "', '" + 
-           station2[1] + "', " + station1[0] + ", 'OK'), (" +
+           serialnum2.to_s + ", '" + loc1 + "', '" + loc2 + "', " + 
+           station1[0] + ", 'OK'), (" +
            time +
            ", '" + call2 + "', '" + call1 + "', " + frequency.to_s + ", '" +
            band + "', '" + mode + "', " + serialnum2.to_s + ", " + 
-           serialnum1.to_s + ", '" + station2[1] + "', '" + 
-           station1[1] + "', " + station2[0] + ", 'OK')")
+           serialnum1.to_s + ", '" + loc2 + "', '" + 
+           loc1 + "', " + station2[0] + ", 'OK')")
 end
 
 (NUMQSOS/2).times {
@@ -1796,7 +1821,7 @@ result.each { |row|
   missing.each { |noqso|
     newqso = db.query("SELECT ID, CALLSIGN from LOG where LOG.STATION_LOCATION = '" +
                       noqso[0] + "' and ID != " + row[0] + 
-                      " order by RAND() limit 1")
+                      " and STATION_CATEGORY != 'MOBILE' order by RAND() limit 1")
     logCall(db, rng, row[1], newqso.fetch_row[1])
   }
 }

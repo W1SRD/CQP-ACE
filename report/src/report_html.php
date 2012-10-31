@@ -208,7 +208,7 @@ class NCCCReportPDF extends TCPDF {
       $catstr .= "</table>\n";
       $this->WriteHTML($catstr);
     }
-    $this->WriteHTML("<p>L = Low Power<br>\nQ = QRP<br>\nM/M = Multi-Multi<br>\nM/S = Multi-Single<br>\nYL = YL Operator<br>\n</p>");
+    $this->WriteHTML("<p>L = Low Power<br>\nQ = QRP<br>\nM/M = Multi-Multi<br>\nM/S = Multi-Single<br>\nYL = YL Operator<br>\nM = Mobile</p>");
     $this->WriteFootnotes();
   }
 
