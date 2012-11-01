@@ -152,7 +152,7 @@ class NCCCSummaryPDF extends TCPDF {
   }
 
   public function TimeReport($ent) {
-    $starttime = new DateTime("2011-10-01 16:00:00");
+    $starttime = new DateTime("2012-10-06 16:00:00");
     $endtime = $ent->GetAllMultipliers();
     $interval = $endtime->diff($starttime);
     return "Time: " . $endtime->format("H:i") . $interval->format(" (%hhr %imin)");

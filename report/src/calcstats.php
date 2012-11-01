@@ -150,6 +150,9 @@ function EntryFromRow($row)
   if (isset($row[13])) {
     $ent->SetStationCall($row[13]);
   }
+  if (isset($row[12])) {
+    $ent->SetAllMultipliers(new DateTime($row[12]));
+  }
   return $ent;
 }
 
@@ -286,6 +289,28 @@ function QueryBestMobile()
   return $mobile;
 }
 
+function QueryBestTimes($instate)
+{
+  $res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and TimeForAllMultipliers is not NULL and SummaryStats.LOCATION = MULTIPLIER.NAME and " . $instate . " order by TimeForAllMultipliers asc limit 1");
+  if ($res) {
+    while ($line = mysql_fetch_row($res)) {
+      $ent = EntryFromRow($line);
+      return $ent;
+    }
+  }
+  else {
+    print "Mysql error: " . mysql_error() . "\n";
+  }
+}
+
+function CalculateBestTimes()
+{
+  $result = array();
+  $result[] = QueryBestTimes("MULTIPLIER.TYPE = 'COUNTY'");
+  $result[] = QueryBestTimes("MULTIPLIER.TYPE <> 'COUNTY'");
+  return $result;
+}
+
 
 $cats = array();
 $cat = new EntryCategory("TOP 3 Single-Op", array(), true, "California");
@@ -368,9 +393,11 @@ $topnonca = new EntryCategory("Non-California", array(), true);
 QuerySummaryCat($topnonca,
 		" and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 20");
 
+$besttimes = CalculateBestTimes();
+
 $pdf = new NCCCSummaryPDF("9999 California QSO Party (CQP) - Draft Summary Report");
 $pdf->LeftColumn($cats, QueryBestMobile(), $mostssb->GetEntries(), $mostcw->GetEntries());
-$pdf->RightColumn($topca, $topnonca, array(), array());
+$pdf->RightColumn($topca, $topnonca, array(), $besttimes);
 
 $pdf->Output("summary_draft.pdf", "F");
 // At this point, the intent is that every element of SummaryStats has its
