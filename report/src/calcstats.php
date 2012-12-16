@@ -10,7 +10,7 @@
 // VALIDQSO should define all the requirements for a QSO to be considered
 // valid for a multiplier or a QSO
 require_once('report_html.php');
-define("VALIDQSO","(QSO.QSO_STATUS = 'OK')");
+define("VALIDQSO", "(QSO.QSO_STATUS in ('OK', 'OKA', 'OKB', 'D1A', 'D1B', 'D1C', 'BYE'))");
 
 // Calculate a report for this year's running of the CQP. This could
 // be replaced by some other way of setting the year.
@@ -20,7 +20,7 @@ $link = mysql_connect('localhost', 'dbtest', 'dbtest') or die("Connect not conne
 mysql_select_db('CQPACE_test', $link) or die("Could not select database");
 
 // Create a temporary table to hold stats needed for the reports
-mysql_query("create temporary table SummaryStats (LOG_ID int, LOCATION VARCHAR(4), CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs int, PHQSOs int, TotalScore int, TimeForAllMultipliers DATETIME, PRIMARY KEY (LOG_ID, LOCATION))", $link)  or die("Cannot create SummaryStats: " . mysql_error());
+mysql_query("create temporary table SummaryStats (LOG_ID int, LOCATION VARCHAR(4), CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs DECIMAL(10,1), PHQSOs DECIMAL(10,1), TotalScore DECIMAL(10,1), TimeForAllMultipliers DATETIME, PRIMARY KEY (LOG_ID, LOCATION))", $link)  or die("Cannot create SummaryStats: " . mysql_error());
 // mysql_query("delete from SummaryStats") or die("Cannot delete");
 
 // The purpose of this question is to select the logs that are:
@@ -60,12 +60,17 @@ mysql_query("update SummaryStats set Multipliers = StatesAndProvinces where InSt
 mysql_query("update SummaryStats set Multipliers = CACounties where not InState") or die("Cannot calculate multipliers: " . mysql_error());;
 
 function GetModeCounts($mode) {
-  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, COUNT(*) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
-  while ($line = mysql_fetch_row($result)) {
-    mysql_query("update SummaryStats set " . $mode . "QSOs = " . $line[2] . " where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1] . "' limit 1");
+  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, SUM(IF(QSO.QSO_STATUS in ('OK','OKA','OKB'),1.0,0.5)) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
+  if ($result) {
+    while ($line = mysql_fetch_row($result)) {
+      mysql_query("update SummaryStats set " . $mode . "QSOs = " . $line[2] . " where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1] . "' limit 1");
+    }
+    mysql_query("update SummaryStats set " . $mode . "QSOs = 0 where " . $mode .
+		"QSOs is null");
   }
-  mysql_query("update SummaryStats set " . $mode . "QSOs = 0 where " . $mode .
-      "QSOs is null");
+  else {
+    print "Query failed: " . mysql_error() . "\n";
+  }
 }
 
 GetModeCounts("CW");
