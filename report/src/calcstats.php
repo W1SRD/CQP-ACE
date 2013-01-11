@@ -48,16 +48,22 @@ function CountMultipliers($multipliertest, $varname) {
     $varname . " is null");
 }
 
-CountMultipliers("MULTIPLIER.TYPE = 'COUNTY'", "CACounties");
-CountMultipliers("(MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE')",
-		 "StatesAndProvinces");
+// CountMultipliers("MULTIPLIER.TYPE = 'COUNTY'", "CACounties");
+// CountMultipliers("(MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE')",
+//		 "StatesAndProvinces");
 
 // The state count does not include California yet, so add one if at least
 // 1 CA county was worked.
-mysql_query("update SummaryStats set StatesAndProvinces = StatesAndProvinces + 1 where CACounties > 0")    or die("Cannot fixed state count: " . mysql_error());
+// mysql_query("update SummaryStats set StatesAndProvinces = StatesAndProvinces + 1 where CACounties > 0")    or die("Cannot fixed state count: " . mysql_error());
+//mysql_query("update SummaryStats set Multipliers = StatesAndProvinces where InState")    or die("Cannot calculate multipliers: " . mysql_error());
+//mysql_query("update SummaryStats set Multipliers = CACounties where not InState") or die("Cannot calculate multipliers: " . mysql_error());;
 
-mysql_query("update SummaryStats set Multipliers = StatesAndProvinces where InState")    or die("Cannot calculate multipliers: " . mysql_error());
-mysql_query("update SummaryStats set Multipliers = CACounties where not InState") or die("Cannot calculate multipliers: " . mysql_error());;
+$res = mysql_query("select SummaryStats.LOG_ID, LOCATION, CLAIMED_CW_Q - D2_CW - 0.5 * D1_CW as CW_Q, CLAIMED_PH_Q - D2_PH - 0.5 * D1_PH, CHECKED_SCORE, CHECKED_MULT from SummaryStats, SCORE where SCORE.LOG_ID = SummaryStats.LOG_ID and SCORE.QTH = LOCATION") or die("Cannot query SCORE: " . mysql_error());
+if ($res) {
+  while ($line = mysql_fetch_row($res)) {
+    mysql_query("update SummaryStats set Multipliers = " . $line[5] . ", CWQSOs = " . $line[3] . ", PHQSOs = " . $line[2] . ", TotalScore = " . $line[4] . " where LOG_ID = " . $line[0] . " and LOCATION = \"" . $line[1] . "\" limit 1") or die("Unable to update SCORE table: " . mysql_error());
+  }
+}
 
 function GetModeCounts($mode) {
   $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, SUM(IF(QSO.GREEN_SCORE in ('OK', 'BYE'),1.0,0.5)) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
@@ -73,8 +79,8 @@ function GetModeCounts($mode) {
   }
 }
 
-GetModeCounts("CW");
-GetModeCounts("PH");
+// GetModeCounts("CW");
+// GetModeCounts("PH");
 
 // Calculate the total score based on information in the table
 mysql_query("update SummaryStats set TotalScore = Multipliers * (3*CWQSOs + 2*PHQSOs)") or die("Calculate total score failed:" .  mysql_error());
@@ -407,7 +413,7 @@ QuerySummaryCat($topnonca,
 
 $besttimes = CalculateBestTimes();
 
-$pdf = new NCCCSummaryPDF("9999 California QSO Party (CQP) - Draft Summary Report");
+$pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) - Draft Summary Report");
 $pdf->LeftColumn($cats, QueryBestMobile(), $mostssb->GetEntries(), $mostcw->GetEntries());
 $pdf->RightColumn($topca, $topnonca, array(), $besttimes);
 
