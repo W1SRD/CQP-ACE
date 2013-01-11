@@ -10,14 +10,14 @@
 // VALIDQSO should define all the requirements for a QSO to be considered
 // valid for a multiplier or a QSO
 require_once('report_html.php');
-define("VALIDQSO", "(QSO.QSO_STATUS in ('OK', 'OKA', 'OKB', 'D1A', 'D1B', 'D1C', 'BYE'))");
+define("VALIDQSO", "(QSO.GREEN_SCORE in ('OK', 'D1', 'BYE'))");
 
 // Calculate a report for this year's running of the CQP. This could
 // be replaced by some other way of setting the year.
-$thisyear = date("Y");		/* getting the current year */
+$thisyear = 2012;
 
 $link = mysql_connect('localhost', 'dbtest', 'dbtest') or die("Connect not connect to database: " . mysql_error());
-mysql_select_db('CQPACE_test', $link) or die("Could not select database");
+mysql_select_db('CQPACE', $link) or die("Could not select database");
 
 // Create a temporary table to hold stats needed for the reports
 mysql_query("create temporary table SummaryStats (LOG_ID int, LOCATION VARCHAR(4), CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs DECIMAL(10,1), PHQSOs DECIMAL(10,1), TotalScore DECIMAL(10,1), TimeForAllMultipliers DATETIME, PRIMARY KEY (LOG_ID, LOCATION))", $link)  or die("Cannot create SummaryStats: " . mysql_error());
@@ -60,7 +60,7 @@ mysql_query("update SummaryStats set Multipliers = StatesAndProvinces where InSt
 mysql_query("update SummaryStats set Multipliers = CACounties where not InState") or die("Cannot calculate multipliers: " . mysql_error());;
 
 function GetModeCounts($mode) {
-  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, SUM(IF(QSO.QSO_STATUS in ('OK','OKA','OKB'),1.0,0.5)) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
+  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, SUM(IF(QSO.GREEN_SCORE in ('OK', 'BYE'),1.0,0.5)) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
   if ($result) {
     while ($line = mysql_fetch_row($result)) {
       mysql_query("update SummaryStats set " . $mode . "QSOs = " . $line[2] . " where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1] . "' limit 1");
@@ -279,6 +279,7 @@ function QuerySummaryCat(&$cat, $querystr)
 
 function QueryBestMobile()
 {
+  $mobile=NULL;
   $res = mysql_query(ENTRY_QUERY_STRING . ", SUM(SummaryStats.PHQSOs + SummaryStats.CWQSOs) as TotalQSO from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and SummaryStats.LOCATION = MULTIPLIER.NAME and LOG.STATION_CATEGORY='MOBILE' group by LOG.ID order by TotalQSO desc limit 1");
   if ($res) {
     while ($line = mysql_fetch_row($res)) {
@@ -311,8 +312,14 @@ function QueryBestTimes($instate)
 function CalculateBestTimes()
 {
   $result = array();
-  $result[] = QueryBestTimes("MULTIPLIER.TYPE = 'COUNTY'");
-  $result[] = QueryBestTimes("MULTIPLIER.TYPE <> 'COUNTY'");
+  $ent = QueryBestTimes("MULTIPLIER.TYPE = 'COUNTY'");
+  if ($ent) {
+    $result[] = $ent;
+  }
+  $ent =  QueryBestTimes("MULTIPLIER.TYPE <> 'COUNTY'");
+  if ($ent) {
+    $result[] = $ent;
+  } 
   return $result;
 }
 
