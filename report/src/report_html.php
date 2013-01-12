@@ -62,7 +62,16 @@ class NCCCReportPDF extends TCPDF {
     $hdrs = $this->columnheadings;
     $hdrs[0] = $category->GetName();
     for ($i = 0; $i <= 6 ; $i++) {
-      $str .= ("  <th align=\"" . (($i > 0) ? "center" : "left") . 
+      if ($i == 0) {
+	$alignment = "left";
+      }
+      else if ($i == 6) {
+	$alignment = "center";
+      }
+      else {
+	$alignment = "right";
+      }
+      $str .= ("  <th align=\"" . $alignment . 
 	       "\" width=\"" . $this->columnwidths[$i] . "%\">" .
 	       $hdrs[$i] . "</th>\n");
     }

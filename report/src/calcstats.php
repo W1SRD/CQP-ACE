@@ -61,7 +61,7 @@ function CountMultipliers($multipliertest, $varname) {
 $res = mysql_query("select SummaryStats.LOG_ID, LOCATION, CLAIMED_CW_Q - D2_CW - 0.5 * D1_CW as CW_Q, CLAIMED_PH_Q - D2_PH - 0.5 * D1_PH, CHECKED_SCORE, CHECKED_MULT from SummaryStats, SCORE where SCORE.LOG_ID = SummaryStats.LOG_ID and SCORE.QTH = LOCATION") or die("Cannot query SCORE: " . mysql_error());
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
-    mysql_query("update SummaryStats set Multipliers = " . $line[5] . ", CWQSOs = " . $line[3] . ", PHQSOs = " . $line[2] . ", TotalScore = " . $line[4] . " where LOG_ID = " . $line[0] . " and LOCATION = \"" . $line[1] . "\" limit 1") or die("Unable to update SCORE table: " . mysql_error());
+    mysql_query("update SummaryStats set Multipliers = " . $line[5] . ", CWQSOs = " . $line[2] . ", PHQSOs = " . $line[3] . ", TotalScore = " . $line[4] . " where LOG_ID = " . $line[0] . " and LOCATION = \"" . $line[1] . "\" limit 1") or die("Unable to update SCORE table: " . mysql_error());
   }
 }
 
@@ -83,7 +83,7 @@ function GetModeCounts($mode) {
 // GetModeCounts("PH");
 
 // Calculate the total score based on information in the table
-mysql_query("update SummaryStats set TotalScore = Multipliers * (3*CWQSOs + 2*PHQSOs)") or die("Calculate total score failed:" .  mysql_error());
+//mysql_query("update SummaryStats set TotalScore = Multipliers * (3*CWQSOs + 2*PHQSOs)") or die("Calculate total score failed:" .  mysql_error());
 
 
 function BestTimeQuery($instatetest, $multipliertest) {
@@ -170,7 +170,7 @@ function EntryFromRow($row)
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID  and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'COUNTY' order by SummaryStats.LOCATION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID  and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'COUNTY' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
     if (strcmp($line[0], $prevcat)) {
@@ -253,7 +253,7 @@ if ($res) {
 	$cats[] = $cat;
       }
       $prevcat = $line[0];
-      $cat = new EntryCategory($line[8]);
+      $cat = new EntryCategory("DX Callsign");
     }
     $ent = EntryFromRow($line);
     $cat->AddEntry($ent);
