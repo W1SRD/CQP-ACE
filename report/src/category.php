@@ -66,14 +66,14 @@ class Entry {
 			      $num_CW=0, $num_PH=0, $num_mult = 0,
 			      $total_score = 0, $entry_class = '',
 			      $qth_abbrev='', $qth_full='') {
-    $this->callsign = $callsign;
+    $this->callsign = strtoupper($callsign);
     $this->operators = $operators;
     $this->num_CW = $num_CW;
     $this->num_PH = $num_PH;
     $this->num_mult = $num_mult;
     $this->total_score = $total_score;
     $this->entry_class = $entry_class;
-    $this->loc_abbrev = $qth_abbrev;
+    $this->loc_abbrev = strtoupper($qth_abbrev);
     $this->loc_full = $qth_full;
     $this->all_multi_time = NULL;
   }

@@ -209,8 +209,24 @@ class NCCCReportPDF extends TCPDF {
     $this->Cell(1, $this->baseline_skip, "", 0, 1);
   }
 
+  public function ReportClubs($clubs, $heading) {
+    $str = "<table width=\"100%\">\n<thead><tr style=\"font-weight:bold;\"><th colspan=\"3\">" . $heading . "</th></tr></thead>\n";
+    foreach ($clubs as $club) {
+      $str .= ("<tr><td align=\"left\" width=\"60%\">" . $club->GetName() . 
+	       "</td><td align=\"right\" width=\"20%\">" . $club->GetNumLogs() .
+	       "</td><td align=\"right\" width=\"20%\">" . $club->GetScore() .
+	       "</td></tr>\n");
+      
+    }
+    $str .= "</table>\n";
+    $this->WriteHtml($str);
+  }
+
   public function ReportCategories($categories) {
     foreach ($categories as $category) {
+      if ($this->GetY() >= $this->last_line) {
+	$this->AddPage();
+      }
       $catstr = "<table width=\"100%\">\n";
       $this->CategoryHeader($catstr,$category);
       $this->CategoryEntries($catstr,$category->GetEntries());
@@ -242,7 +258,7 @@ class NCCCReportPDF extends TCPDF {
 		      NCCCReportPDF::RIGHTMARGIN);
     $this->SetHeaderMargin(0);
     $this->SetFooterMargin(0);
-    $this->last_line = 11*72 - 36 - 2*$this->baseline_skip;
+    $this->last_line = 11*72 - 36 - 3*$this->baseline_skip;
 
     $this->report_title = $title;
     $this->AddPage();

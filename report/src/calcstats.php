@@ -88,7 +88,7 @@ function GetModeCounts($mode) {
 
 function BestTimeQuery($instatetest, $multipliertest) {
   // Calculate best time to 58 for class of stations
-  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED, MIN(QSO.QSO_DATE) as DATE from SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and SummaryStats.LOCATION = QSO.QTH_SENT and " . $instatetest . " and LOG.ID = QSO.LOG_ID and SummaryStats.Multipliers = 58 and " . VALIDQSO . " and QSO.QTH_RECEIVED = MULTIPLIER.NAME and " . $multipliertest . " GROUP BY SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED ORDER BY SummaryStats.LOG_ID asc, SummaryStats.LOCATION asc, DATE desc");
+  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED, MIN(QSO.QSO_DATE) as DATE from SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and SummaryStats.LOCATION = QSO.QTH_SENT and " . $instatetest . " and LOG.ID = QSO.LOG_ID and LOG.OPERATOR_CATEGORY='SINGLE-OP' and SummaryStats.Multipliers = 58 and " . VALIDQSO . " and QSO.QTH_RECEIVED = MULTIPLIER.NAME and " . $multipliertest . " GROUP BY SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED ORDER BY SummaryStats.LOG_ID asc, SummaryStats.LOCATION asc, DATE desc");
 
   if ($result) {
     $previd = -9999;
@@ -101,6 +101,7 @@ function BestTimeQuery($instatetest, $multipliertest) {
 	$previd = $line[0];
 	$prevloc = $line[1];
 	mysql_query("update SummaryStats set TimeForAllMultipliers = '" . $line[3] . "' where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1]. "' limit 1") or die("Unable to update" . mysql_error());
+	mysql_query("update SCORE set T2_58 = '" . $line[3] . "' where LOG_ID = " . $line[0] . " and QTH = '" . $line[1] . "' limit 1") or die("Unable to update SCORE table: " .mysql_error());
       }
     }
   }
@@ -329,6 +330,44 @@ function CalculateBestTimes()
   return $result;
 }
 
+function ParseClubResults($res, &$clubs)
+{
+  if ($res) {
+    while ($line = mysql_fetch_row($res)) {
+      $club = new Club($line[1], intval($line[3]), $line[2]);
+      $clubs[] = $club;
+    }
+  }
+  else {
+    die("Club query failed: " . mysql_error());
+  }
+}
+
+function QueryClubs($extraconst, $limit) 
+{
+  return mysql_query("select CLUB.ID, CLUB.NAME, ROUND(SUM(CHECKED_SCORE*CLUB_ALLOCATION)) as SCORE, COUNT(DISTINCT LOG.ID), CLUB.LOCATION from CLUB, OPERATOR, LOG, SummaryStats, SCORE where CLUB.ID = OPERATOR.CLUB_ID and SummaryStats.LOG_ID=LOG.ID and OPERATOR.LOG_ID = LOG.ID and LOG.ID = SCORE.LOG_ID and CLUB.ELIGIBLE " . $extraconst . " GROUP BY CLUB.ID ORDER BY SCORE DESC" . $limit);
+}
+
+function CalculateBestClubs()
+{
+  $result = array();
+  $res = QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 1");
+  ParseClubResults($res, $result);
+  $res = QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 1");
+  ParseClubResults($res, $result);
+  return $result;
+  
+}
+
+$caclubs = array();
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", ""), $caclubs);
+$ocaclubs = array();
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", ""), $ocaclubs);
+$pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Draft Results");
+$pdf->ReportClubs($caclubs, "California Clubs");
+$pdf->ReportClubs($ocaclubs, "Non-California Clubs");
+$pdf->Output("Club_report_draft.pdf", "F");
+
 
 $cats = array();
 $cat = new EntryCategory("TOP 3 Single-Op", array(), true, "California");
@@ -413,9 +452,11 @@ QuerySummaryCat($topnonca,
 
 $besttimes = CalculateBestTimes();
 
+$clubs = CalculateBestClubs();
+
 $pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) - Draft Summary Report");
 $pdf->LeftColumn($cats, QueryBestMobile(), $mostssb->GetEntries(), $mostcw->GetEntries());
-$pdf->RightColumn($topca, $topnonca, array(), $besttimes);
+$pdf->RightColumn($topca, $topnonca, $clubs, $besttimes);
 
 $pdf->Output("summary_draft.pdf", "F");
 // At this point, the intent is that every element of SummaryStats has its
