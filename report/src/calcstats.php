@@ -360,9 +360,9 @@ function CalculateBestClubs()
 }
 
 $caclubs = array();
-ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", ""), $caclubs);
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 3"), $caclubs);
 $ocaclubs = array();
-ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", ""), $ocaclubs);
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 3"), $ocaclubs);
 $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Draft Results");
 $pdf->ReportClubs($caclubs, "California Clubs");
 $pdf->ReportClubs($ocaclubs, "Non-California Clubs");

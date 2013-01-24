@@ -143,9 +143,10 @@ class NCCCSummaryPDF extends TCPDF {
     $this->SetFont('helvetica','', $this->fontsize);
     $count = 1;
     foreach ($entries as $ent) {
+      list ($stationcall, $extraline) = $this->StationAndOps($ent, 200);
       $str .= ("<tr>\n<td align=\"center\">" .
 	       strval($count++)."</td>\n<td>" .
-	       $ent->GetCallsign() . "</td>\n<td>" .
+	       $stationcall . "</td>\n<td>" .
 	       $ent->GetQTH() . "</td>\n<td align=\"right\">" .
 	       $this->strformat($ent->GetTotalScore()) . "</td>\n</tr>\n");
     }
@@ -159,7 +160,7 @@ class NCCCSummaryPDF extends TCPDF {
   }
 
   public function RightColumn($california, $world, $clubs, $besttimes) {
-    $widths = array(10, 33, 25, 32);
+    $widths = array(10, 54, 16, 20);
     $this->SetMargins(5*72, NCCCSummaryPDF::TOPMARGIN,
 		      0.75*72);
     $this->SetY(NCCCSummaryPDF::TOPMARGIN-10);
@@ -177,7 +178,7 @@ class NCCCSummaryPDF extends TCPDF {
     $str .= "<tr><td colspan=\"4\" width=\"100%\">&nbsp;</td></tr>";
     $str .= "<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">Top Club Entries (CA and non-CA)</th></tr>\n";
     foreach ($clubs as $club) {
-      $str .= ("<tr><td width=\"". $widths[0]."%\">&nbsp;</td><td width=\"". $widths[1]."%\">" . $club->GetName() . "</td><td width=\"". $widths[2]."%\">" .
+      $str .= ("<tr><td width=\"". ($widths[0]+$widths[1])."%\" colspan=\"2\">" . $club->GetName() . "</td><td width=\"". $widths[2]."%\">" .
 	       strval($club->GetNumLogs()) .
 	       " logs</td><td align=\"right\" width=\"". $widths[3]."%\">" . $this->strformat($club->GetScore()) . 
 	       "</td></tr>\n");
@@ -285,12 +286,12 @@ class NCCCSummaryPDF extends TCPDF {
       $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\" style=\"font-weight:bold;\">" . 
 	       $stationcall . 
 	       "</td>");
-      $str .= ("<td align=\"left\" width=\"".strval($widths[2]) ."%\">Various Counties</td>");
+      $str .= ("<td align=\"left\" width=\"".strval($widths[2]) .
+	       sprintf("%%\">%d counties</td>",$mobile->GetNumCounty()));
       $str .= ("<td align=\"left\" width=\"" .
 	       strval($widths[3]+$widths[4]+$widths[5]+$widths[6]) .
-               "%\">" . sprintf("%d QSOs (%d counties)",
-				$mobile->GetNumQSO(),
-				$mobile->GetNumCounty()) .
+               "%\">" . sprintf("%d QSOs",
+				$mobile->GetNumQSO()) .
 	       "</td>");
       $str .= "</tr>\n";
       if (strcmp($extraline, "") != 0) {
