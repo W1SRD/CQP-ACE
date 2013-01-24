@@ -186,8 +186,9 @@ class NCCCSummaryPDF extends TCPDF {
     $str .= "<tr><td colspan=\"4\" width=\"100%\">&nbsp;</td></tr>";
     $str .= "<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">First to 58 Mults (CA and non-CA)</th></tr>\n";
     foreach ($besttimes as $bt) {
+      list ($stationcall, $extraline) = $this->StationAndOps($bt, 200);
       $str .= ("<tr><td width=\"". $widths[0]."%\">&nbsp;</td><td width=\"".
-	       $widths[1]."%\">" . $bt->GetCallsign() . "</td><td colspan=\"2\" width=\"". 
+	       $widths[1]."%\">" . $stationcall . "</td><td colspan=\"2\" width=\"". 
 	       ($widths[2]+$widths[3])."%\">" .
 	       $this->TimeReport($bt) . "</td></tr>\n");
     }

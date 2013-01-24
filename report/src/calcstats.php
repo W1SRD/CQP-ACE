@@ -147,7 +147,7 @@ function EntryClassStr($line) {
   return trim($ecs);
 }
 
-define("ENTRY_QUERY_STRING", "select SummaryStats.LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL, LOG.ID, TimeForAllMultipliers, STATION_OWNER_CALLSIGN");
+define("ENTRY_QUERY_STRING", "select SummaryStats.LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL, LOG.ID, TimeForAllMultipliers, STATION_OWNER_CALLSIGN, MULTIPLIER.NAME");
 
 function EntryFromRow($row)
 {
@@ -168,6 +168,17 @@ function EntryFromRow($row)
   return $ent;
 }
 
+function NewRegionalRecord($id, $loc)
+{
+  $regquery = mysql_query("select REGIONAL.ID from LOG, MULTIPLIER, REGIONAL where LOG.ID=" . $id . " and REGIONAL.LOG_ID = LOG.ID and REGIONAL.MULT_ID = MULTIPLIER.ID and MULTIPLIER.NAME = '" . $loc . "' limit 1");
+  if ($regquery) {
+    while ($line = mysql_fetch_row($regquery)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 
 $cats = array();
 $prevcat = '';
@@ -182,6 +193,10 @@ if ($res) {
       $cat = new EntryCategory($line[8]);
     }
     $ent = EntryFromRow($line);
+    if (NewRegionalRecord($line[11], $line[14])) {
+      $ent->SetNewRecord();
+      $ent->AddFootnote("New " . $line[8] . " record");
+    }
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -209,6 +224,10 @@ if ($res) {
       $cat = new EntryCategory($line[8]);
     }
     $ent = EntryFromRow($line);
+    if (NewRegionalRecord($line[11], $line[14])) {
+      $ent->SetNewRecord();
+      $ent->AddFootnote("New " . $line[8] . " record");
+    }
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -233,6 +252,10 @@ if ($res) {
       $cat = new EntryCategory($line[8]);
     }
     $ent = EntryFromRow($line);
+    if (NewRegionalRecord($line[11], $line[14])) {
+      $ent->SetNewRecord();
+      $ent->AddFootnote("New " . $line[8] . " record");
+    }
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -360,9 +383,9 @@ function CalculateBestClubs()
 }
 
 $caclubs = array();
-ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 3"), $caclubs);
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 4"), $caclubs);
 $ocaclubs = array();
-ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 3"), $ocaclubs);
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 4"), $ocaclubs);
 $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Draft Results");
 $pdf->ReportClubs($caclubs, "California Clubs");
 $pdf->ReportClubs($ocaclubs, "Non-California Clubs");
@@ -394,6 +417,9 @@ $cats[] = QuerySummaryCat($cat,
 $cat = new EntryCategory("TOP Multi-Multi Expedition, California", array(), false, "");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='MULTI-MULTI' and LOG.STATION_CATEGORY='CCE' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
+$cat = new EntryCategory("TOP 3 Single-Op Low Power, California", array(), true, "");
+$cats[] = QuerySummaryCat($cat,
+			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='LOW' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
 $cat = new EntryCategory("TOP 3 Single-Op Low Power, Non-California", array(), true, "");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='LOW' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
