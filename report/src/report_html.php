@@ -171,7 +171,7 @@ class NCCCReportPDF extends TCPDF {
     foreach ($entries as $entry) {
       list ($sign, $extraline) = $this->StationAndOps($entry);
 
-      $str .= ("<tr " . ($entry->GetNewRecord() ? "style=\"color:#FF0000;\"" : 
+      $str .= ("<tr " . ($entry->GetNewRecord() ? "style=\"color:#ff0000;\"" : 
 			 "") . ">\n");
       $str .= ("  <td width=\"" . $this->columnwidths[0] .
 	       "%\">" . $sign . "</td>\n");

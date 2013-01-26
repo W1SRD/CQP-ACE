@@ -57,7 +57,7 @@ class Entry {
   protected $entry_class = "";
   protected $new_record = false; /* true means that this entry is a
 				    new record for the category. */
-  protected $footnote = "";
+  protected $footnote = array();
   protected $loc_abbrev = "";
   protected $loc_full = "";
   protected $all_mult_time = NULL;
@@ -87,7 +87,7 @@ class Entry {
   }
 
   public function AddFootnote($footnote) {
-    $this->footnote = $footnote;
+    $this->footnote[] = $footnote;
   }
 
   public function SetAllMultipliers($timedate) {
@@ -103,7 +103,22 @@ class Entry {
   public function GetTotalScore() { return $this->total_score; }
   public function GetEntryClass() { return $this->entry_class; }
   public function GetNewRecord() { return $this->new_record; } 
-  public function GetFootnote() { return $this->footnote; }
+  public function GetFootnote() { 
+    if (empty($this->footnote)) {
+      return "";
+    }
+    else {
+      $result = "New record for ";
+      $notes = $this->footnote;
+      $lastelem = array_pop($notes);
+      if (empty($notes)) {
+	return $result . $lastelem;
+      }
+      else {
+	return $result . implode(", ", $notes) . " and " . $lastelem . ".";
+      }
+    }
+  }
   public function GetQTH() { return $this->loc_abbrev; }
   public function GetLocation() { return $this->loc_full; }
   public function GetAllMultipliers() { return $this->all_multi_time; }

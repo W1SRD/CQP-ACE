@@ -227,9 +227,9 @@ class NCCCSummaryPDF extends TCPDF {
     $count = 1;
     $colwidth = $this->ColumnWidth($widths[1]);
     foreach ($cat->GetEntries() as $ent) {
-      $colorstr =  ($ent->GetNewRecord() ? " style=\"color:#FF0000;\" " : 
+      $colorstr =  ($ent->GetNewRecord() ? " style=\"color:#ff0000;\" " : 
 		    "");
-      $boldcolorstr =  ($ent->GetNewRecord() ? " style=\"font-weight:bold; color:#FF0000;\" " : 
+      $boldcolorstr =  ($ent->GetNewRecord() ? " style=\"font-weight:bold; color:#ff0000;\" " : 
 		    " style=\"font-weight:bold;\" ");
       $str .= "<tr>";
       if ($cat->GetNumbered()) {

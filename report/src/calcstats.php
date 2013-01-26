@@ -149,6 +149,36 @@ function EntryClassStr($line) {
 
 define("ENTRY_QUERY_STRING", "select SummaryStats.LOCATION, LOG.OPERATOR_CATEGORY, TotalScore, LOG.CALLSIGN, CWQSOs, PHQSOs, Multipliers, POWER_CATEGORY, MULTIPLIER.DESCRIPTION, STATION_CATEGORY, OVERLAY_YL, LOG.ID, TimeForAllMultipliers, STATION_OWNER_CALLSIGN, MULTIPLIER.NAME");
 
+function NewRegionalRecord($id, $loc)
+{
+  $regquery = mysql_query("select REGIONAL.ID from LOG, MULTIPLIER, REGIONAL where LOG.ID=" . $id . " and REGIONAL.LOG_ID = LOG.ID and REGIONAL.MULT_ID = MULTIPLIER.ID and MULTIPLIER.NAME = '" . $loc . "' limit 1");
+  if ($regquery) {
+    while ($line = mysql_fetch_row($regquery)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function CheckRecords(&$ent, &$row)
+{
+  $newrecord = false;
+  if (NewRegionalRecord($row[11], $row[14])) {
+    $ent->AddFootnote($row[8]);
+    $newrecord = true;
+  }
+  $res = mysql_query("select NAME from SPECIAL where LOG_ID = " . 
+		    $row[11]);
+  while ($line = mysql_fetch_row($res)) {
+    $ent->AddFootnote($line[0]);
+    $newrecord = true;
+  }
+  if ($newrecord) {
+    $ent->SetNewRecord();
+  }
+}
+
+
 function EntryFromRow($row)
 {
   $operators = array();
@@ -165,19 +195,10 @@ function EntryFromRow($row)
   if (isset($row[12])) {
     $ent->SetAllMultipliers(new DateTime($row[12]));
   }
+  CheckRecords($ent, $row);
   return $ent;
 }
 
-function NewRegionalRecord($id, $loc)
-{
-  $regquery = mysql_query("select REGIONAL.ID from LOG, MULTIPLIER, REGIONAL where LOG.ID=" . $id . " and REGIONAL.LOG_ID = LOG.ID and REGIONAL.MULT_ID = MULTIPLIER.ID and MULTIPLIER.NAME = '" . $loc . "' limit 1");
-  if ($regquery) {
-    while ($line = mysql_fetch_row($regquery)) {
-      return true;
-    }
-  }
-  return false;
-}
 
 
 $cats = array();
@@ -193,10 +214,6 @@ if ($res) {
       $cat = new EntryCategory($line[8]);
     }
     $ent = EntryFromRow($line);
-    if (NewRegionalRecord($line[11], $line[14])) {
-      $ent->SetNewRecord();
-      $ent->AddFootnote("New " . $line[8] . " record");
-    }
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -224,10 +241,6 @@ if ($res) {
       $cat = new EntryCategory($line[8]);
     }
     $ent = EntryFromRow($line);
-    if (NewRegionalRecord($line[11], $line[14])) {
-      $ent->SetNewRecord();
-      $ent->AddFootnote("New " . $line[8] . " record");
-    }
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
@@ -252,10 +265,6 @@ if ($res) {
       $cat = new EntryCategory($line[8]);
     }
     $ent = EntryFromRow($line);
-    if (NewRegionalRecord($line[11], $line[14])) {
-      $ent->SetNewRecord();
-      $ent->AddFootnote("New " . $line[8] . " record");
-    }
     $cat->AddEntry($ent);
   }
   if (isset($cat)) {
