@@ -210,11 +210,11 @@ class NCCCReportPDF extends TCPDF {
   }
 
   public function ReportClubs($clubs, $heading) {
-    $str = "<table width=\"100%\">\n<thead><tr style=\"font-weight:bold;\"><th colspan=\"3\">" . $heading . "</th></tr></thead>\n";
+    $str = "<table width=\"100%\">\n<thead><tr style=\"font-weight:bold;\"><th width=\"60%\">" . $heading . "</th><th align=\"right\" width=\"20%\">Num Logs</th><th align=\"right\" width=\"20%\">Score</th></tr></thead>\n";
     foreach ($clubs as $club) {
       $str .= ("<tr><td align=\"left\" width=\"60%\">" . $club->GetName() . 
-	       "</td><td align=\"right\" width=\"20%\">" . $club->GetNumLogs() .
-	       "</td><td align=\"right\" width=\"20%\">" . $club->GetScore() .
+	       "</td><td align=\"right\" width=\"20%\">" . $this->strformat($club->GetNumLogs()) .
+	       "</td><td align=\"right\" width=\"20%\">" . $this->strformat($club->GetScore()) .
 	       "</td></tr>\n");
       
     }
