@@ -141,6 +141,7 @@ class Entry {
   }
   public function GetQTH() { return $this->loc_abbrev; }
   public function GetLocation() { return $this->loc_full; }
+  public function SetLocation($loc) { $this->loc_full = $loc; }
   public function GetAllMultipliers() { return $this->all_multi_time; }
 }
 

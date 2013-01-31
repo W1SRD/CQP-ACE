@@ -392,6 +392,19 @@ function CalculateBestClubs()
   
 }
 
+function FindCountry($ent) {
+  $res = mysql_query("select ENTITY.NAME from ENTITY, LOG where ENTITY.ID=LOG.ENTITY and LOG.CALLSIGN = \"" . $ent->GetCallsign() . "\" and STATION_LOCATION=\"" . $ent->GetQTH() . "\" limit 1");
+  if ($res and ($line = mysql_fetch_row($res))) {
+    $ent->SetLocation($line[0]);
+  }
+}
+
+function ReplaceLocWithCountry($cat) {
+  foreach ($cat->GetEntries() as $ent) {
+    FindCountry($ent);
+  }
+}
+
 $caclubs = array();
 ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 3"), $caclubs);
 $ocaclubs = array();
@@ -455,6 +468,7 @@ QuerySummaryCat($cat,
 $cat = new EntryCategory("TOP DX", array(), false, "");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='Country' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
+ReplaceLocWithCountry($cat);
 
 $cat = new EntryCategory("TOP Schools", array(), false, "CA and Non-CA", "school");
 $cats[] = QuerySummaryCat($cat,
