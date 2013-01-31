@@ -20,13 +20,15 @@ class EntryCategory {
   protected $location = "";
   protected $entries = array();
   protected $numbered = false;
+  protected $awardname = "";
   
   
-  public function __construct($name, $entries=array(), $numbered=false, $location="") {
+  public function __construct($name, $entries=array(), $numbered=false, $location="", $awardname="") {
     $this->name = $name;
     $this->entries = $entries;
     $this->numbered = $numbered;
     $this->location = $location;
+    $this->awardname = $awardname;
   }
 
   public function AddEntry($entry) {
@@ -40,6 +42,12 @@ class EntryCategory {
   public function GetNumbered() { return $this->numbered; }
 
   public function GetLocation() { return $this->location; }
+
+  /**
+   * Return the name of the special award that corresponds to this
+   * category.
+   */
+  public function GetAwardName() { return $this->awardname; }
 }
 
 /**
@@ -103,6 +111,18 @@ class Entry {
   public function GetTotalScore() { return $this->total_score; }
   public function GetEntryClass() { return $this->entry_class; }
   public function GetNewRecord() { return $this->new_record; } 
+
+  public function GetMatchingRecord($name) {
+    if ($this->new_record) {
+      foreach ($this->footnote as $note) {
+	if (strcmp($note, $name) == 0) {
+	  return true;
+	}
+      }
+    }
+    return false;
+  }
+
   public function GetFootnote() { 
     if (empty($this->footnote)) {
       return "";
@@ -128,16 +148,20 @@ class Club {
   protected $name = "";
   protected $numlogs = 0;
   protected $totalscore = 0;
+  protected $newrecord = false;
 
-  public function __construct($name, $logs, $score) {
+  public function __construct($name, $logs, $score, $newrecord=false) {
     $this->name = $name;
     $this->numlogs = $logs;
     $this->totalscore = $score;
+    $this->newrecord = $newrecord;
   }
 
   public function GetName() { return $this->name; }
   public function GetNumLogs() { return $this->numlogs; }
   public function GetScore() { return $this->totalscore; }
+  public function SetNewRecord($rec) { $this->newrecord = $rec; }
+  public function GetNewRecord() { return $this->newrecord; }
 }
 
 class MobileEntry {

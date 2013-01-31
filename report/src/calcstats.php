@@ -278,15 +278,15 @@ if ($res) {
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'Country' order by MULTIPLIER.DESCRIPTION asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . ", CONTINENT from SummaryStats, LOG, MULTIPLIER, ENTITY where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'Country' and LOG.ENTITY=ENTITY.ID order by CONTINENT asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
-    if (strcmp($line[0], $prevcat)) {
+    if (strcmp($line[15], $prevcat)) {
       if (isset($cat)) {
 	$cats[] = $cat;
       }
-      $prevcat = $line[0];
-      $cat = new EntryCategory("DX Callsign");
+      $prevcat = $line[15];
+      $cat = new EntryCategory($line[15]);
     }
     $ent = EntryFromRow($line);
     $cat->AddEntry($ent);
@@ -325,7 +325,7 @@ function QueryBestMobile()
       $ent = EntryFromRow($line);
       $ncresult = mysql_query("select count(*) from SummaryStats where SummaryStats.LOG_ID = " . $line[11]);
       $numcounty = mysql_fetch_row($ncresult);
-      $mobile = new MobileEntry($ent, intval($line[14]), intval($numcounty[0]));
+      $mobile = new MobileEntry($ent, intval($line[15]), intval($numcounty[0]));
     }
   }
   else {
@@ -366,7 +366,8 @@ function ParseClubResults($res, &$clubs)
 {
   if ($res) {
     while ($line = mysql_fetch_row($res)) {
-      $club = new Club($line[1], intval($line[3]), $line[2]);
+      $club = new Club($line[1], intval($line[3]), $line[2], 
+		       strcmp($line[4], "OCA") == 0); // GROSS HACK!!!!
       $clubs[] = $club;
     }
   }
@@ -392,9 +393,9 @@ function CalculateBestClubs()
 }
 
 $caclubs = array();
-ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 4"), $caclubs);
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 3"), $caclubs);
 $ocaclubs = array();
-ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 4"), $ocaclubs);
+ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 3"), $ocaclubs);
 $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Draft Results");
 $pdf->ReportClubs($caclubs, "California Clubs");
 $pdf->ReportClubs($ocaclubs, "Non-California Clubs");
@@ -402,44 +403,44 @@ $pdf->Output("Club_report_draft.pdf", "F");
 
 
 $cats = array();
-$cat = new EntryCategory("TOP 3 Single-Op", array(), true, "California");
+$cat = new EntryCategory("TOP 3 Single-Op", array(), true, "California", "all time high CA");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
-$cat = new EntryCategory("TOP 3 Single-Op", array(), true, "Non-California");
+$cat = new EntryCategory("TOP 3 Single-Op", array(), true, "Non-California", "all time high non-CA");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
-$cat = new EntryCategory("TOP Multi-Single", array(), false, "CA and Non-CA");
+$cat = new EntryCategory("TOP Multi-Single", array(), false, "CA and Non-CA", "multi-single");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='MULTI-SINGLE' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='MULTI-SINGLE' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
-$cat = new EntryCategory("TOP Multi-Multi", array(), false, "California");
+$cat = new EntryCategory("TOP Multi-Multi", array(), false, "California", "multi-multi");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='MULTI-MULTI' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 
-$cat = new EntryCategory("TOP 2 Single-Op Expeditions, California", array(), false, "");
+$cat = new EntryCategory("TOP 2 Single-Op Expeditions, California", array(), false, "", "S/O expedition");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and LOG.STATION_CATEGORY='CCE' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 2");
-$cat = new EntryCategory("TOP Multi-Single Expedition, California", array(), false, "");
+$cat = new EntryCategory("TOP Multi-Single Expedition, California", array(), false, "", "M/S expedition");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='MULTI-SINGLE' and LOG.STATION_CATEGORY='CCE' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
-$cat = new EntryCategory("TOP Multi-Multi Expedition, California", array(), false, "");
+$cat = new EntryCategory("TOP Multi-Multi Expedition, California", array(), false, "", "M/M expedition");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='MULTI-MULTI' and LOG.STATION_CATEGORY='CCE' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
-$cat = new EntryCategory("TOP 3 Single-Op Low Power, California", array(), true, "");
+$cat = new EntryCategory("TOP 3 Single-Op Low Power, California", array(), true, "", "low power CA");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='LOW' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
-$cat = new EntryCategory("TOP 3 Single-Op Low Power, Non-California", array(), true, "");
+$cat = new EntryCategory("TOP 3 Single-Op Low Power, Non-California", array(), true, "", "low power");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='LOW' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
 
-$cat = new EntryCategory("TOP Single-Op QRP", array(), false, "CA and Non-CA");
+$cat = new EntryCategory("TOP Single-Op QRP", array(), false, "CA and Non-CA", "QRP");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='QRP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='QRP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 
-$cat = new EntryCategory("TOP Single-Op YL", array(), false, "CA and Non-CA");
+$cat = new EntryCategory("TOP Single-Op YL", array(), false, "CA and Non-CA", "YL");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and OVERLAY_YL ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 QuerySummaryCat($cat,
@@ -455,7 +456,7 @@ $cat = new EntryCategory("TOP DX", array(), false, "");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='Country' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 
-$cat = new EntryCategory("TOP Schools", array(), false, "CA and Non-CA");
+$cat = new EntryCategory("TOP Schools", array(), false, "CA and Non-CA", "school");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and STATION_CATEGORY='SCHOOL' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 QuerySummaryCat($cat,
@@ -465,13 +466,13 @@ $cat = new EntryCategory("TOP New Contester", array(), false, "California");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and OVERLAY_NEW_CONTESTER ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 
-$mostssb = new EntryCategory("Single-Op - Most SSB", array(), false, "");
+$mostssb = new EntryCategory("Single-Op - Most SSB", array(), false, "", "most SSB QSOs");
 QuerySummaryCat($mostssb,
 		" and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP'  ORDER BY PHQSOs desc, LOG.CALLSIGN asc LIMIT 1");
 QuerySummaryCat($mostssb,
 		" and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP'  ORDER BY PHQSOs desc, LOG.CALLSIGN asc LIMIT 1");
 
-$mostcw = new EntryCategory("Single-Op - Most CW", array(), false, "");
+$mostcw = new EntryCategory("Single-Op - Most CW", array(), false, "", "most CW QSOs");
 QuerySummaryCat($mostcw,
 		" and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP'  ORDER BY CWQSOs desc, LOG.CALLSIGN asc LIMIT 1");
 QuerySummaryCat($mostcw,

@@ -62,8 +62,9 @@ class NCCCSummaryPDF extends TCPDF {
     return $result;
   }
 
-  private function StationAndOps($entry, $colwidth) {
-    if (strcmp($entry->GetFootnote(), "") != 0) {
+  private function StationAndOps($entry, $colwidth, $awardname="") {
+    if ($entry->GetMatchingRecord($awardname) and
+	strcmp($entry->GetFootnote(), "") != 0) {
       $this->footnotes[] = $entry->GetFootnote();
       $footnotestr = "<sup>*</sup>";
     }
@@ -178,7 +179,15 @@ class NCCCSummaryPDF extends TCPDF {
     $str .= "<tr><td colspan=\"4\" width=\"100%\">&nbsp;</td></tr>";
     $str .= "<tr><th colspan=\"4\" align=\"center\" style=\"background-color:#fde9d9; border: 1pt solid black;\">Top Club Entries (CA and non-CA)</th></tr>\n";
     foreach ($clubs as $club) {
-      $str .= ("<tr><td width=\"". ($widths[0]+$widths[1])."%\" colspan=\"2\">" . $club->GetName() . "</td><td width=\"". $widths[2]."%\">" .
+      if ($club->GetNewRecord()) {
+	$str .= "<tr style=\"color:#ff0000;\">";
+      }
+      else {
+	$str .= "<tr>";
+      }
+      $str .= ("<td width=\"". ($widths[0]+$widths[1])."%\" colspan=\"2\">" . 
+	       $club->GetName() . ($club->GetNewRecord() ? "<sup>*</sup>" : "").
+	       "</td><td width=\"". $widths[2]."%\">" .
 	       strval($club->GetNumLogs()) .
 	       " logs</td><td align=\"right\" width=\"". $widths[3]."%\">" . $this->strformat($club->GetScore()) . 
 	       "</td></tr>\n");
@@ -227,9 +236,9 @@ class NCCCSummaryPDF extends TCPDF {
     $count = 1;
     $colwidth = $this->ColumnWidth($widths[1]);
     foreach ($cat->GetEntries() as $ent) {
-      $colorstr =  ($ent->GetNewRecord() ? " style=\"color:#ff0000;\" " : 
+      $colorstr =  ($ent->GetMatchingRecord($cat->GetAwardName()) ? " style=\"color:#ff0000;\" " : 
 		    "");
-      $boldcolorstr =  ($ent->GetNewRecord() ? " style=\"font-weight:bold; color:#ff0000;\" " : 
+      $boldcolorstr =  ($ent->GetMatchingRecord($cat->GetAwardName()) ? " style=\"font-weight:bold; color:#ff0000;\" " : 
 		    " style=\"font-weight:bold;\" ");
       $str .= "<tr>";
       if ($cat->GetNumbered()) {
@@ -238,7 +247,8 @@ class NCCCSummaryPDF extends TCPDF {
       else {
 	$str .= ("<td width=\"".strval($widths[0]) ."%\">&nbsp;</td>");
       }
-      list ($stationcall, $extraline) = $this->StationAndOps($ent, $colwidth);
+      list ($stationcall, $extraline) = 
+	$this->StationAndOps($ent, $colwidth, $cat->GetAwardName());
       $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\" " . $boldcolorstr . ">" . 
 	       $stationcall . 
 	       "</td><td align=\"left\" width=\"".strval($widths[2]) ."%\"" . $colorstr . ">" . 
@@ -283,7 +293,7 @@ class NCCCSummaryPDF extends TCPDF {
 	($mobile->GetNewRecord() ? " style=\"color:#ff0000;\"" : "") . ">";
       $str .= "<td width=\"" . $widths[0] . "%\">&nbsp;</td>";
       list ($stationcall, $extraline) = 
-	$this->StationAndOps($ent, $colwidth);
+	$this->StationAndOps($ent, $colwidth, "mobile QSOs");
       $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\" style=\"font-weight:bold;\">" . 
 	       $stationcall . 
 	       "</td>");
@@ -315,10 +325,10 @@ class NCCCSummaryPDF extends TCPDF {
       "%\" colspan=\"4\">Results</th></tr>\n";
     foreach ($entries as $ent) {
       $str .= "<tr" . 
-	($ent->GetNewRecord() ? " style=\"color:#ff0000;\"" : "") . ">";
+	($ent->GetMatchingRecord("most " . $title . " QSOs") ? " style=\"color:#ff0000;\"" : "") . ">";
       $str .= "<td width=\"" . $widths[0] . "%\">&nbsp;</td>";
       list ($stationcall, $extraline) = 
-	$this->StationAndOps($ent, $colwidth);
+	$this->StationAndOps($ent, $colwidth, "most " . $title . " QSOs");
       $str .= ("<td align=\"left\" width=\"".strval($widths[1]) ."%\" style=\"font-weight:bold;\">" . 
 	       $stationcall . 
 	       "</td>");
