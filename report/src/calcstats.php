@@ -220,9 +220,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Draft Results (CA)");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Results (CA)");
   $pdf->ReportCategories($cats);
-  $pdf->Output("CA_report_draft.pdf", "F");
+  $pdf->Output("CA_report_final.pdf", "F");
 }
 else {
   print "Report query failed: " . mysql_error() . "\n";
@@ -247,9 +247,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Draft Results (US)");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Results (US)");
   $pdf->ReportCategories($cats);
-  $pdf->Output("US_report_draft.pdf", "F");
+  $pdf->Output("US_report_final.pdf", "F");
 }
 
 $cats = array();
@@ -271,9 +271,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Canadian Draft Results");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Canadian Results");
   $pdf->ReportCategories($cats);
-  $pdf->Output("Canadian_report_draft.pdf", "F");
+  $pdf->Output("Canadian_report_final.pdf", "F");
 }
 
 $cats = array();
@@ -295,9 +295,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  DX Draft Results");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  DX Results");
   $pdf->ReportCategories($cats);
-  $pdf->Output("DX_report_draft.pdf", "F");
+  $pdf->Output("DX_report_final.pdf", "F");
 }
 
 require_once('summary_lib.php');
@@ -409,10 +409,10 @@ $caclubs = array();
 ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 3"), $caclubs);
 $ocaclubs = array();
 ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 3"), $ocaclubs);
-$pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Draft Results");
+$pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Results");
 $pdf->ReportClubs($caclubs, "California Clubs");
 $pdf->ReportClubs($ocaclubs, "Non-California Clubs");
-$pdf->Output("Club_report_draft.pdf", "F");
+$pdf->Output("Club_report_final.pdf", "F");
 
 
 $cats = array();
@@ -504,11 +504,11 @@ $besttimes = CalculateBestTimes();
 
 $clubs = CalculateBestClubs();
 
-$pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) - Draft Summary Report");
+$pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) - Summary Report");
 $pdf->LeftColumn($cats, QueryBestMobile(), $mostssb->GetEntries(), $mostcw->GetEntries());
 $pdf->RightColumn($topca, $topnonca, $clubs, $besttimes);
 
-$pdf->Output("summary_draft.pdf", "F");
+$pdf->Output("summary_final.pdf", "F");
 // At this point, the intent is that every element of SummaryStats has its
 // correct value.
 
