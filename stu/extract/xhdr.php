@@ -31,13 +31,13 @@ $PASS = getenv('ACEPASS');
 
 
 // Open the log file
-$LOG = fopen($argv[2], "r");
-if (!$LOG) {
+$log = file_get_contents($argv[2]);
+if (!$log) {
   error_log("Can't open input file - $argv[1]\n");
   exit(1);
 }
 
-$CQPF = CabCrack($argv[1], $argv[2], _xhdr_getlog());
+$CQPF = CabCrack($argv[1], $argv[2], $log);
 
 if (!$CQPF) {
   error_log("Failed processing Cabrillo log\n");

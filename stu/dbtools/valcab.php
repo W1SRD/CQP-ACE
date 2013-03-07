@@ -4,13 +4,11 @@
 // Validate a cab file and see whether its suitable for smashing
 // into the DB.
 //
-// Split off all the QSO ecords in the file, then look at each
-// field to make sure it has the format we expect.  If all records
-// pass - we can use the DB for all other normalization - if not, we
-// need a human to look this log over.
-//
 // Version 1.0 - 10/23/2012
 // Initial version
+//
+// Version 2.0 - 10/24/2012
+// - Turned into a utility to do various validations of a Cabrillo file
 //
 
 
@@ -47,7 +45,7 @@ $FTREGX = array(
   QTIME		=> "/[0-9]{4}/",
   ALPHA		=> "/[A-Z]{1,}/i",
   NUMERIC	=> "/[0-9]{1,}/",
-  CALL		=> ":[A-Z]+[0-9]+|[0-9]+[A-Z]+.*:i",
+  CALL		=> ":[A-Z]+[0-9]+|[0-9]+[A-Z]+.{1,}:i",
 );
 
 
@@ -103,18 +101,37 @@ function CheckFields($r) {
 
 // MAIN starts here
 
-if (count($argv) != 2) {
-  print "usage: valcab <cabfile>\n";
+if (count($argv) < 2) {
+  print "usage: valcab [options] <cabfile>\n";
+  print "Options:\n";
+  print "-e    - only print if there are any errors\n";
+  print "-v    - print invalid QSO records\n";
   exit(1);
 }
 
-if (!($log = file_get_contents($argv[1]))) {
-  print "$argv[1]: Cant open input file\n";
+$flag = getopt("ve");
+$fname = $argv[count($argv)-1];
+
+$verbose = FALSE;
+$eonly = FALSE;
+
+if ($flag) {
+  if (array_key_exists('v', $flag)) {
+    $verbose = TRUE;
+  }
+  if (array_key_exists('e', $flag)) {
+    $eonly = TRUE;
+  }
+
+}
+
+if (!($log = file_get_contents($fname))) {
+  print "$fname: Cant open input file\n";
   exit(1);
 }
 
 if (!preg_match("/^START-OF-LOG:.*^END-OF-LOG:.$/ms", $log)) {
-  print "$argv[1]: Didn't find Cabrillo log\n";
+  print "$fname: Didn't find Cabrillo log\n";
   exit(1);
 }
 
@@ -122,26 +139,37 @@ if (!preg_match("/^START-OF-LOG:.*^END-OF-LOG:.$/ms", $log)) {
 // QSO records...
 
 if (!($nq = preg_match_all("/(^QSO:.*\n)/m", $log, $q))) {
-  print "$argv[1]: No QSO records found\n";
+  print "$fname: No QSO records found\n";
   exit(1);
 }
 
-print "$argv[1]: QSO Records = $nq  ";
-
 $nbad = 0;
+$badrecs = array();
 
 for ($i=0; $i < count($q[0]); $i++) {
   $qso = $q[1][$i];
 
   if (!CheckFields($qso)) {
+    if ($verbose) {
+      $badrecs[] = $qso;
+    }
     $nbad++;
   }
 }
 
-if (!$nbad) {
-  print "ALL MATCHED\n";
-} else {
-  print "$nbad Bad Qs\n";
+// Print results
+if ($eonly && $nbad) {
+  print "$fname: QSO recs = $nq  Bad Q = $nbad\n";
+} 
+
+if ($verbose) {
+  if (!$eonly) {
+    print "$fname: QSO recs = $nq  Bad Q = $nbad\n";
+  }
+
+  foreach ($badrecs as $q) {
+    print $q;
+  }
 }
 
 exit(0);
