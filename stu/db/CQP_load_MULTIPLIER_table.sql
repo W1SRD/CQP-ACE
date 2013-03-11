@@ -118,4 +118,5 @@ insert into MULTIPLIER (NAME,DESCRIPTION,VALUE,TYPE) values ('AB','Alberta',1,'P
 insert into MULTIPLIER (NAME,DESCRIPTION,VALUE,TYPE) values ('BC','British Columbia',1,'PROVINCE');         
 insert into MULTIPLIER (NAME,DESCRIPTION,VALUE,TYPE) values ('NT','Northern Territories',1,'PROVINCE');
 insert into MULTIPLIER (NAME,DESCRIPTION,VALUE,TYPE) values ('DX','DX Country',0,'COUNTRY');
+insert into MULTIPLIER (NAME,DESCRIPTION,VALUE,TYPE) values ('XXXX','Missing',0,'COUNTRY');
 commit;

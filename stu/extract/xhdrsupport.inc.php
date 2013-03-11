@@ -1,29 +1,41 @@
 <?php
 
-// Utility functions
+
+// Support for XHDRCrack
+
+$LINES = array();
+$LN = 0;
+$LNCNT = 0;
+$LOG = '';
 
 
 function setup_xhdr_getl($log) {
+  global $LOG, $LINES, $LN, $LNCNT;
+
+  // Copy the whole log for later retrieval
+  $LOG = $log;
+
+  // Split log into lines with no CR
+  $lines = preg_replace("/\r/", '', $log);
+  $LNCNT = preg_match_all("/(.*\n)/m", $lines, $LINES);
+  $LN = 0;
 }
 
-
 function _xhdr_getl() {
-  global $argv, $LOG;
+  global $LINES, $LN, $LNCNT;
 
-  $l = fgets($LOG);
-  if (!$l) {
-    // We don't expect premature EOF - moan and exit
-    error_log("$argv[1]:  Premature EOF\n");
+  if ($LN >= $LNCNT) {
+    pd("    Premature EOF in _xhdr_get!");
     exit(1);
   }
-  $l = preg_replace("/\r/", ' ', $l);
-  return($l);
+
+  return($LINES[0][$LN++]);
 }
 
 function _xhdr_getlog() {
-  global $argv;
-  return(file_get_contents($argv[2]));
+  global $LOG;
+  return $LOG;
 }
 
-?>
 
+?>

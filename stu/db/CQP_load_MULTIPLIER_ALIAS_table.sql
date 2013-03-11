@@ -4168,5 +4168,349 @@ insert into MULTIPLIER_ALIAS
   MULTIPLIER_NAME = 'MERC',
   ALIAS = 'MERCED',
   MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'MERC');
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'XXXX',
+  ALIAS = 'XXXX',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'XXXX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'SCOTLAND',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'ENGLAND',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'PUERTO',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'PANAMA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'BALEARIC',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'ITALY',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'ARGENTINA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'SWITZERLAND',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'HUNGARY',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'ANGOLA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'CHINA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'NAMBIA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'NIGERIA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'EUROPEAN',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'BULGARIA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'FRANCE',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'BELARUS',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'POLAND',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'NE',
+  ALIAS = 'NEBRASKA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'NE');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SFRA',
+  ALIAS = 'SANF',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SFRA');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SFRA',
+  ALIAS = 'SFRN',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SFRA');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SFRA',
+  ALIAS = 'SRFA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SFRA');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'CCOS',
+  ALIAS = 'CCS',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'CCOS');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'LANG',
+  ALIAS = 'LOSANGLES',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'LANG');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'LANG',
+  ALIAS = 'LAXX',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'LANG');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SDIE',
+  ALIAS = 'SIDE',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SDIE');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SDIE',
+  ALIAS = 'SDEI',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SDIE');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SCLA',
+  ALIAS = 'SCLU',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SCLA');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SACR',
+  ALIAS = 'SACA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SACR');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'SCLA',
+  ALIAS = 'SACL',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SCLA');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'ALPI',
+  ALIAS = 'ALPE',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'ALPI');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'INYO',
+  ALIAS = 'ONYO',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'INYO');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'TEHA',
+  ALIAS = 'TEHE',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'TEHA');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'RIVE',
+  ALIAS = 'RIVR',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'RIVE');
+
+-- This one may be more questionable...
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'MO',
+  ALIAS = 'M0',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'MO');
+
+-- This one may be really questionable...
+-- so is left out... all in K0JPL log 2012
+-- insert into MULTIPLIER_ALIAS
+--   set
+--   MULTIPLIER_NAME = 'SLUI',
+--   ALIAS = 'SLOA',
+--   MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'SLUI');
+
+-- This one may be really questionable...
+-- so is left out... all in K0JPL log 2012
+-- insert into MULTIPLIER_ALIAS
+--   set
+--   MULTIPLIER_NAME = 'AMAD',
+--   ALIAS = 'AMOD',
+--   MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'AMAD');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'NEW',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'JAPAN',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'ARUBA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'AUSTRALIA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'GUAM',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'NEW',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'AUSTRALIA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'GERMANY',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'MEXICO',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'AUSTRIA',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'CANARY',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'BELIZE',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'ISRAEL',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'CZECH',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'NORTHERN',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'URUGUAY',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
+insert into MULTIPLIER_ALIAS
+  set
+  MULTIPLIER_NAME = 'DX',
+  ALIAS = 'ECUADOR',
+  MULTIPLIER_ID = (select ID from MULTIPLIER where NAME = 'DX');
+
 commit;
 
