@@ -1,0 +1,235 @@
+@charset "UTF-8";
+.arial-22-bold {
+	font-family: Arial;
+	font-size: 22px;
+	font-style: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.arial-16 {
+	font-family: Arial;
+	font-size: 16px;
+	color: #000000;
+}
+.arial-14 {
+	font-family: Arial;
+	font-size: 12px;
+	font-style: normal;
+	color: #000000;
+}
+.arial-9 {
+	font-family: arial;
+	font-size: 9px;
+	color: #000000;
+}
+.tahoma-22-bold {
+	font-family: tahoma;
+	font-size: 22px;
+	color: #000000;
+	font-weight: bold;
+}
+.tahoma-18-bold {
+	font-family: Tahoma;
+	font-size: 18px;
+	font-style: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.tahoma-16 {
+	font-family: Tahoma;
+	font-size: 16px;
+	color: #000000;
+}
+.tahoma-16-WhiteBold {
+	font-family: Tahoma;
+	font-size: 16px;
+	color: #FFF;
+	font-weight: bold;
+}
+.tahoma-16-Red {
+	font-family: Tahoma;
+	font-size: 16px;
+	color: #F00;
+}
+.tahoma-14 {
+	font-family: Tahoma;
+	font-size: 14px;
+	color: #000000;
+}
+.tahoma-14-red {
+	font-family: Tahoma;
+	font-size: 14px;
+	color: #F00;
+}
+.tahoma-10-bold {
+	font-family: Tahoma;
+	font-size: 10px;
+	font-style: normal;
+	color: #000000;
+	font-weight: bold;
+}
+.arial-10-bold {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	font-style: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.verdana-10-bold {
+	font-family: verdana;
+	font-size: 10px;
+	font-style: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.verdana-22-bold {
+	font-family: Verdana;
+	font-size: 22px;
+	font-style: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.verdana-18-bold {
+	font-family: verdana;
+	font-size: 18px;
+	font-style: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.verdana-16-bold {
+	font-family: verdana;
+	font-size: 16px;
+	font-style: normal;
+	font-weight: bold;
+	color: #000000;
+}
+.tahoma-10 {
+	font-family: Tahoma;
+	font-size: 10px;
+	font-style: normal;
+	color: #000000;
+}
+.tahoma-16-blue {
+	font-family: Tahoma;
+	font-size: 16px;
+	font-style: normal;
+	color: #0000FF;
+}
+.tahoma-16-bluebold {
+	font-family: Tahoma;
+	font-size: 16px;
+	font-style: normal;
+	font-weight: bold;
+	color: #00F;
+}
+.tahoma-16-redbold {
+	font-family: Tahoma;
+	font-size: 16px;
+	font-style: normal;
+	font-weight: bold;
+	color: #F00;
+}
+.tahoma-12 {
+	font-family: tahoma;
+	font-size: 12px;
+	font-style: normal;
+	color: #000000;
+}
+.tahoma-12-bold {
+	font-family: tahoma;
+	font-size: 12px;
+	font-style: normal;
+	color: #000000;
+	font-weight: bold;
+}
+.tahoma-12-red {
+	font-family: tahoma;
+	font-size: 12px;
+	font-style: normal;
+	color: #F00;
+}
+.tahoma-12-redbold {
+	font-family: tahoma;
+	font-size: 12px;
+	font-style: normal;
+	color: #F00;
+	font-weight: bold;
+}
+.courier-14 {
+	font-family: "Courier New", Courier, monospace;
+	font-size: 14px;
+	font-style: normal;
+	color: #000000;
+}
+.tahoma-18-bluebold {
+	font-family: tahoma;
+	font-size: 18px;
+	font-style: normal;
+	font-weight: bold;
+	color: #0000FF;
+}
+.tahoma-14-bold {
+	font-family: tahoma;
+	font-size: 14px;
+	font-style: normal;
+	color: #000000;
+	font-weight: bold;
+}
+.tahoma-16-bold {
+	font-family: tahoma;
+	font-size: 16px;
+	font-style: normal;
+	color: #000000;
+	font-weight: bold;
+}
+.tahoma-14-bluebold {
+	font-family: tahoma;
+	font-size: 14px;
+	font-style: normal;
+	color: #0000FF;
+	font-weight: bold;
+}
+.tahoma-14-blue {
+	font-family: tahoma;
+	font-size: 14px;
+	font-style: normal;
+	color: #0000FF;
+	font-weight: normal;
+}
+.tahoma-12-blue {
+	font-family: tahoma;
+	font-size: 12px;
+	font-style: normal;
+	color: #0000FF;
+	font-weight: normal;
+}
+.tahoma-22-bluebold {
+	font-family: tahoma;
+	font-size: 22px;
+	color: #0000FF;
+	font-weight: bold;
+}
+.tahoma-14-boldred {
+	font-family: tahoma;
+	font-size: 14px;
+	font-style: normal;
+	color: #FF0000;
+	font-weight: bold;
+}
+.tahoma-18-boldred {
+	font-family: Tahoma;
+	font-size: 18px;
+	font-style: normal;
+	font-weight: bold;
+	color: #FF0000;
+}
+textarea {
+    resize: none;
+}
+.cqplogrec {
+	font-family: Verdana, Geneva, sans-serif;
+	font-size: 12px;
+	background-color: #CCC;
+	overflow: auto;
+	border-color: #000;
+}
