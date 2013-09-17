@@ -1,0 +1,3 @@
+# Set AllowOveride to FileInfo
+setEnv ACEUSER cqpace
+setEnv ACEPASS cqpace1

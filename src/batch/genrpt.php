@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 
 // Generate the HTML file for the Logs received page for CQP
@@ -12,8 +11,10 @@ date_default_timezone_set('UTC');
 $HEAD = file_get_contents("rpthead.html");
 $BODY = '';
 $TAIL = file_get_contents("rptend.html");
-$ACEUSER = getenv('ACEUSER');
-$ACEPASS = getenv('ACEPASS');
+$ACEDBUSER = getenv('ACEDBUSER');
+$ACEDBPASS = getenv('ACEDBPASS');
+$ACEDB   = getenv('ACEDB');
+$ACEDBHOST = getenv('ACEDBHOST');
 
 // Utility function
 // pd - diag print
@@ -71,7 +72,7 @@ function ProcessTS($ts) {
 
 // Open a datbase connection and get the log table entries
 try {
-  $logt = new CQPACE_RPT_LOG_TABLE($ACEUSER, $ACEPASS);
+  $logt = new CQPACE_RPT_LOG_TABLE($ACEDBUSER, $ACEDBPASS, $ACEDB, $ACEDBHOST);
 
   $rows = new CQPACE_LOG_REPORT();
   $rows = $logt->log_row_select(array());
@@ -127,7 +128,7 @@ try {
   }
  
   // Build title for page...
-  $HEAD = preg_replace("/Logs Received Page/", "Logs Received = " . $nlogs ."  (" . gmdate("d-M-Y  H:i:s e") . ")", $HEAD);
+  $HEAD = preg_replace("/Logs Received Page/", $nlogs . " Logs Received as of " . gmdate("d-M-Y  H:i e"), $HEAD);
 
   file_put_contents("index.html", $HEAD . $BODY . $TAIL);
   pd("Report Generated");

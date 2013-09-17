@@ -25,12 +25,14 @@ function pd($l) {
 //
 
 function Spam($msg) {
-  if (!isset($msg['FROM'])) {
-    return TRUE;
+  if (preg_match("/^CQP 2013 Log/", $msg['SUBJECT'])) {
+    pd("Spam: No CQP 2013 Log in SUBJECT");
+    return FALSE;
   }
 
-  if (preg_match("/^CQP 2012 Log/", $msg['SUBJECT'])) {
-    return FALSE;
+  if (!isset($msg['FROM'])) {
+    pd("Spam: No FROM");
+    return TRUE;
   }
 
   if (preg_match("/^Received-SPF: (\w+?) /ms", $msg['HEADERS'], $m) &&

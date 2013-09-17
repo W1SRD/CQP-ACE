@@ -53,8 +53,8 @@ $OTHER = '.';
 define('WAITFORMORE', '300');	// 10 minutes
 define('IMAPWAIT', '60');	// 1 minute
 
-define('CQPSTART', strtotime('2013-10-05'));
-define('CQPEND',   strtotime('2013-10-06'));
+define('CQPSTART', strtotime('2011-10-01'));
+define('CQPEND',   strtotime('2013-10-07'));
 
 
 // MAIN
@@ -73,13 +73,12 @@ if (!$USER || !$PASS) {
 // Main processing loop - SLEEP delay is at the bottom
 
 while (1) {
-  // Login and see how many new messages have arrived
-  if (($err = erLogin())) {
-    pd("Mail Account - LOGIN FAIL");
-    pd("  $err");
-    sleep(IMAPWAIT);
-    continue;
-  }
+   // Login and see how many new messages have arrived
+   if (!erLogin()) {
+     pd("Mail Account - LOGIN FAIL");
+     sleep(IMAPWAIT);
+     continue;
+   }
 
   pd("Mail Account - LOGIN");
 
@@ -190,6 +189,7 @@ while (1) {
       // identifiying an existing club)
 
       $dbres = CQPACEUpdateDB($CQPF, "$CABLOGS/$fname");
+
       SendResponse($msg, $CQPF, $fname, $dbres); 
 
       // Move the message to the DONE folder
