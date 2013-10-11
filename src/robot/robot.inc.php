@@ -25,8 +25,14 @@ function pd($l) {
 //
 
 function Spam($msg) {
-  if (preg_match("/^CQP 2012 Log/", $msg['SUBJECT'])) {
+  if (preg_match("/^CQP 2013 Log/", $msg['SUBJECT'])) {
+    pd("Spam: No CQP 2013 Log in SUBJECT");
     return FALSE;
+  }
+
+  if (!isset($msg['FROM'])) {
+    pd("Spam: No FROM");
+    return TRUE;
   }
 
   if (preg_match("/^Received-SPF: (\w+?) /ms", $msg['HEADERS'], $m) &&
@@ -295,7 +301,7 @@ function SendResponse($msg, $CQPF, $fname, $dbres) {
 
   // Format the reply message...
   $b =  "---------------------------------------------------------------------------\n";
-  $b .= "## This is an automated response from the CQP Log Robot [ROBO-DEAN V1.0] ##\n";
+  $b .= "## This is an automated response from the CQP Log Robot                  ##\n";
   $b .= "## Please do not respond to this email address - send any questions to   ##\n";
   $b .= "## the CQP Chair at cqp-chair@cqp.org                                    ##\n";
   $b .= "---------------------------------------------------------------------------\n";
@@ -303,20 +309,20 @@ function SendResponse($msg, $CQPF, $fname, $dbres) {
  
   switch ($dbres) {
     case 'create':
-      $b .= "Thank you for submitting your log for CQP-2012!  We have received your\n";
+      $b .= "Thank you for submitting your log for CQP-2013!  We have received your\n";
       $b .= "log and determined the information below.  You may re-submit your log\n";
       $b .= "to correct any missing or incorrect information.\n";
       break;
 
     case 'update':
-      $b .= "Thank you for UPDATING your log for CQP-2012.  The robot has processed\n";
+      $b .= "Thank you for UPDATING your log for CQP-2013.  The robot has processed\n";
       $b .= "the log and determined the information below.  You may re-submit your log\n";
       $b .= "again if there is still something not right BUT WE STRONGLY SUGGEST YOU\n";
       $b .= "CHECK OUT THE FAQ link below if you are having problems.\n";
       break;
 
     default:
-      $b .= "Thank you for submitting your log for CQP-2012.  The robot has processed\n";
+      $b .= "Thank you for submitting your log for CQP-2013.  The robot has processed\n";
       $b .= "the log and determined the information below.  You may re-submit your log\n";
       $b .= "to correct any missing or incorrect information.\n";
       $b .= "\n";
@@ -380,13 +386,13 @@ function SendResponse($msg, $CQPF, $fname, $dbres) {
 function NonComprendez($msg, $needHuman) {
   // Format the reply message...
   $b =  "---------------------------------------------------------------------------\n";
-  $b .= "## This is an automated response from the CQP Log Robot [ROBO-DEAN V1.0] ##\n";
+  $b .= "## This is an automated response from the CQP Log Robot                  ##\n";
   $b .= "## Please do not respond to this email address - send any questions to   ##\n";
   $b .= "## the CQP Chair at cqp-chair@cqp.org                                    ##\n";
   $b .= "---------------------------------------------------------------------------\n";
   $b .= "\n\n";
-  $b .= "Thank you for your CQP-2012 submission!  We have received your\n";
-  $b .= "submission but ROBO-DEAN doesn't understand what you sent.\n\n";
+  $b .= "Thank you for your CQP-2013 submission!  We have received your\n";
+  $b .= "submission but the Log Robot doesn't understand what you sent.\n\n";
 
   $b .= "PROBABLE CAUSE\n\n";
 
@@ -444,7 +450,7 @@ function NonComprendez($msg, $needHuman) {
   $b .= "73!\n";
   $b .= "The NCCC CQP Team\n";
 
-  $subject = "[CQP ROBO-DEAN] " . $msg['SUBJECT'];
+  $subject = "CQP Log Submission " . $msg['SUBJECT'];
 
   erSendMessage($msg['TO'], $msg['FROM'], $subject, $b);
 }

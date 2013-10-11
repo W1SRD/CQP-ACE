@@ -40,30 +40,30 @@ require_once('cqpace.inc.php');
 
 // Global data
 
-// Folder names to handle moved messages
+// Required Gmail folder names to handle moved messages
 $HUMAN = 'Human';		// Human assistance required
 $DONE = 'Processed';		// Robot processed messages
-$JUNK = "SPAMWonderfulSPAM";    // Stuff we think might be SPAM
+$JUNK = 'CQP Spam';             // Stuff we think might be SPAM
 
 // Path names for data storage
-$CABLOGS = '/mnt/ec2-user/CQPlogs';
-//$CABLOGS = ".";
+$CABLOGS = '/home/sdyer/logs/2013';
 $OTHER = '.';
 
 // Defines
 define('WAITFORMORE', '300');	// 10 minutes
 define('IMAPWAIT', '60');	// 1 minute
 
-define('CQPSTART', strtotime('2012-10-06'));
-define('CQPEND',   strtotime('2012-10-07'));
+define('CQPSTART', strtotime('2011-10-01'));
+define('CQPEND',   strtotime('2013-10-07'));
 
 
 // MAIN
-// Grab user name and password for the account from
-// environment variables...
 
+// Grab user name and password for the account from environment variables... be sure to escape @ sign.
 $USER = getenv('CQPUSER');
 $PASS = getenv('CQPPASS');
+//print $USER . "\n";
+//print $PASS . "\n";
 
 if (!$USER || !$PASS) {
   print "Can't find username or password in the ENV\n";
@@ -73,14 +73,12 @@ if (!$USER || !$PASS) {
 // Main processing loop - SLEEP delay is at the bottom
 
 while (1) {
-  // Login and see how many new messages have arrived
-
-  if (($err = erLogin())) {
-    pd("Mail Account - LOGIN FAIL");
-    pd("  $err");
-    sleep(IMAPWAIT);
-    continue;
-  }
+   // Login and see how many new messages have arrived
+   if (!erLogin()) {
+     pd("Mail Account - LOGIN FAIL");
+     sleep(IMAPWAIT);
+     continue;
+   }
 
   pd("Mail Account - LOGIN");
 
@@ -96,18 +94,16 @@ while (1) {
       pd("    Get message - $m");
       $msg = erGetMessage($m);
  
+      // Check for SPAM
       if (Spam($msg)) {
         pd("      !! Probable SPAM !!");
         erMoveMessage($m, $JUNK);
         break;
       }
 
-      // If there are attachments - there should only be one...
-      // ... and if there are attachments, we ignore the file body
-  
+      // Check for attachments. If there are attachments - there should only be one and we ignore the file body
       if (count($msg['ATTACHMENTS'])) {
         // If there is more than one - we need human help...
-        
         if (count($msg['ATTACHMENTS']) != 1) {
           pd("      From: " . $m['FROM'] . ' - ' . 
              count($msg['ATTACHMENTS']) . " attachments");
@@ -119,11 +115,9 @@ while (1) {
         }
   
         // Cabrillo check...
-  
         if (!CabFileCheck($msg)) {
           // Not Cabrillo - whistle up the help
-          pd("      From: " . $msg['FROM'] . ' - ' . 
-             "NON-CABRILLO LOG");
+          pd("      From: " . $msg['FROM'] . ' - ' .  "NON-CABRILLO LOG");
           pd("        -> HUMAN");
 
           $needHuman = NOCABRILLOATTACHMENT;
@@ -133,12 +127,10 @@ while (1) {
         // Cabrillo file - whoopee! - Save to disk
         $log = $msg['ATTACHMENTS'][0]['FILE'];
   
-      } else {
-        // No attachments... scan the body for the log...
+      } else { // No attachments... scan the body for the log...
         if (!($log = CabBodyCheck($msg))) {
           // Not Cabrillo - whistle up the help
-          pd("      From: " . $msg['FROM'] . ' - ' .
-             "NON-CABRILLO MESSAGE BODY");
+          pd("      From: " . $msg['FROM'] . ' - ' .  "NON-CABRILLO MESSAGE BODY");
           pd("        -> HUMAN");
 
           $needHuman = NOCABRILLOBODY;
@@ -151,8 +143,7 @@ while (1) {
 
       // Check this is a log for CQP
       if (!CheckContest($log)) {
-        pd("      From: " . $msg['FROM'] . ' - ' .
-           "Missing CONTEST field or NOT CQP log");
+        pd("      From: " . $msg['FROM'] . ' - ' .  "Missing CONTEST field or NOT CQP log");
         pd("        -> HUMAN");
           
         $needHuman = NOTCQPCONTEST;
@@ -160,8 +151,7 @@ while (1) {
       }
 
       if (!CabCheckQDates($log, CQPSTART, CQPEND)) {
-        // Dammed if the dates in the log aren't within the window
-        // of this year's contest...
+        // Dammed if the dates in the log aren't within the window of this year's contest...
         $needHuman = CQPDATEERROR;
         break;
       }
@@ -174,8 +164,7 @@ while (1) {
         exit(1);
       }
       
-      // Change the mode on the file to prevent accidental
-      // deletion. 
+      // Change the mode on the file to prevent accidental deletion. 
       chmod("$CABLOGS/$fname", 0400);
 
       pd("    From: " . $msg['FROM']);
@@ -200,6 +189,7 @@ while (1) {
       // identifiying an existing club)
 
       $dbres = CQPACEUpdateDB($CQPF, "$CABLOGS/$fname");
+
       SendResponse($msg, $CQPF, $fname, $dbres); 
 
       // Move the message to the DONE folder

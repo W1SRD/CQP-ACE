@@ -26,7 +26,7 @@ $SERVER = 'imap.gmail.com';
 $SMTP = 'smtp.gmail.com';
 
 // Define for retry count
-define('IMAPRETRY', '5');
+define('IMAPRETRY', '1');
 
 //
 // erLogin - login our email account
@@ -40,10 +40,10 @@ function erLogin() {
   imap_timeout(IMAP_READTIMEOUT, 5);
   imap_timeout(IMAP_WRITETIMEOUT, 5);
 
-  $IMAP = imap_open('{' . "$SERVER" . ":993/imap/ssl" . '}' . "INBOX",
-                    $USER, $PASS, NIL, IMAPRETRY);
+  $IMAP = imap_open('{' . "$SERVER" . ":993/imap/ssl" . '}' . "INBOX", $USER, $PASS, NULL, IMAPRETRY) or print_r(imap_errors());
 
-  return ($IMAP ? FALSE : imap_last_error());
+//  return ($IMAP ? FALSE : imap_last_error());
+  return $IMAP;
 }
 
 
@@ -120,6 +120,7 @@ function erSendMessage($from, $to, $subject, $body) {
   $headers = array(
     'From' => $from,
     'To'   => $to,
+//    'To'   => 'w1srd@yahoo.com',
     'Subject' => $subject,
     'MIME-Version' => '1.0',
     'Content-Type' => 'text/plain',
@@ -175,14 +176,12 @@ function erGetMessage($msg) {
 
   // Get the message and its contents
   $header = imap_headerinfo($IMAP, $msg);
+  //print_r($header);
   $structure = imap_fetchstructure($IMAP, $msg);
+  // print_r($structure);
   $attachments = array();
 
-  // If there are attachments on this message, grab them and decode
-  // as necessary
-
-  // print_r($structure);
-
+  // If there are attachments on this message, grab them and decode as necessary
   if(isset($structure->parts) && count($structure->parts)) {
     for($i = 0; $i < count($structure->parts); $i++) {
 
@@ -224,7 +223,9 @@ function erGetMessage($msg) {
   }
 
   $m = array();
-  $m['FROM'] = $header->from[0]->mailbox . '@' . $header->from[0]->host;
+  if (isset($header->from)) {
+    $m['FROM'] = $header->from[0]->mailbox . '@' . $header->from[0]->host;
+  }
   $m['TO'] =   $header->to[0]->mailbox . '@' . $header->to[0]->host;  
   $m['SUBJECT'] = $header->subject ? $header->subject : '';
   $m['DATE'] = $header->date;

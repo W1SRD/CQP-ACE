@@ -18,10 +18,10 @@ class CQPACE_LOG_REPORT {
 class CQPACE_RPT_LOG_TABLE {
 
 // Variable definitions
-private $USER = '';			// Username for DB access
-private $PASS = '';			// Password for DB access
-private $HOST = '127.0.0.1';		// Host for the DB
-private $DBNAME = 'CQPACE';		// Database to access
+private $DBUSER = '';			// Username for DB access
+private $DBPASS = '';			// Password for DB access
+private $DBHOST = '';   		// Host for the DB
+private $DBNAME = '';	                // Database to access
 
 private $DBH;				// PDO database handle...
 
@@ -43,16 +43,18 @@ ENDSQL;
 // Constructor
 // 
 
-function __construct($user, $pass, $host = '127.0.0.1', $db = 'CQPACE') {
+function __construct($user, $pass, $db, $host) {
   // Set up the local variables and create the connection to the DB
 
-  $this->USER = $user;  $this->PASS = $pass;
-  $this->HOST = $host;  $this->DBNAME = $db;
+  $this->DBUSER = $user;  
+  $this->DBPASS = $pass;
+  $this->DBNAME = $db;
+  $this->DBHOST = $host;  
 
-  $dsn = "mysql:dbname=" . $this->DBNAME . ";host=" . $this->HOST. ";charset=utf8";
+  $dsn = "mysql:dbname=" . $this->DBNAME . ";host=" . $this->DBHOST. ";charset=utf8";
 
   try {
-    $this->DBH = new PDO($dsn, $this->USER, $this->PASS);
+    $this->DBH = new PDO($dsn, $this->DBUSER, $this->DBPASS);
     
     // Set attributes to help prevent SQL injections
     $this->DBH->setAttribute(PDO::ATTR_EMULATE_PREPARES, FALSE);

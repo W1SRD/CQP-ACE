@@ -2,7 +2,6 @@
 <?php
 
 // Generate the HTML file for the Logs received page for CQP
-//
 
 require_once('logrpt.inc.php');
 
@@ -10,20 +9,15 @@ require_once('logrpt.inc.php');
 date_default_timezone_set('UTC');
 
 // Globals
-
 $HEAD = file_get_contents("rpthead.html");
 $BODY = '';
 $TAIL = file_get_contents("rptend.html");
-
 $ACEUSER = getenv('ACEUSER');
 $ACEPASS = getenv('ACEPASS');
 
 // Utility function
-
 // pd - diag print
-//
 // Time stamped message with newline appended to STDOUT
-//
 
 function pd($l) {
   print(gmdate("d-M-Y_H:i:s") . " UTC: ". $l. "\n");
@@ -68,6 +62,7 @@ function convertCatPower($cat, $pwr) {
   return ($catpwr);
 }
   
+
 function ProcessTS($ts) {
   $utc = strtotime($ts);
   return (date("M-d H:i", strtotime($ts)));
@@ -75,7 +70,6 @@ function ProcessTS($ts) {
 
 
 // Open a datbase connection and get the log table entries
-
 try {
   $logt = new CQPACE_RPT_LOG_TABLE($ACEUSER, $ACEPASS);
 
@@ -133,11 +127,9 @@ try {
   }
  
   // Build title for page...
-  $HEAD = preg_replace("/Logs Received Page/", 
-                       "Logs Received = " . $nlogs ."  (" . gmdate("d-M-Y  H:i:s e") . ")",
-                       $HEAD);
+  $HEAD = preg_replace("/Logs Received Page/", "Logs Received = " . $nlogs ."  (" . gmdate("d-M-Y  H:i:s e") . ")", $HEAD);
 
-  file_put_contents("report.html", $HEAD . $BODY . $TAIL);
+  file_put_contents("index.html", $HEAD . $BODY . $TAIL);
   pd("Report Generated");
   exit(0);
 

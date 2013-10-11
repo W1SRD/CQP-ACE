@@ -53,8 +53,10 @@ function CQPACERenameFile($fullfname) {
 
 function CQPACEUpdateDB($CQPF, $fullfname) {
   // Grab user and password from the environment
-  $USER = getenv('ACEUSER');
-  $PASS = getenv('ACEPASS');
+  $DBUSER = getenv('ACEDBUSER');
+  $DBPASS = getenv('ACEDBPASS');
+  $DBNAME   = getenv('ACEDBNAME');
+  $DBHOST = getenv('ACEDBHOST');
 
   // $CQPF contains the full information we need to
   // update the DB and perhaps some we don't - so
@@ -67,7 +69,7 @@ function CQPACEUpdateDB($CQPF, $fullfname) {
 
   // Get database handle
   try {
-    $logt = new CQPACE_LOG_TABLE($USER, $PASS);
+    $logt = new CQPACE_LOG_TABLE($DBUSER, $DBPASS, $DBNAME, $DBHOST);
   } catch (Exception $e) {
     pd("  CQP-ACE ERROR NEW:");
     pd("  " . $e->getMessage());
