@@ -11,10 +11,11 @@
 // valid for a multiplier or a QSO
 require_once('report_html.php');
 define("VALIDQSO", "(QSO.GREEN_SCORE in ('OK', 'D1', 'BYE'))");
+date_default_timezone_set("Europe/London");
 
 // Calculate a report for this year's running of the CQP. This could
 // be replaced by some other way of setting the year.
-$thisyear = 2012;
+$thisyear = 2013;
 
 $link = mysql_connect('localhost', 'dbtest', 'dbtest') or die("Connect not connect to database: " . mysql_error());
 mysql_select_db('CQPACE', $link) or die("Could not select database");
@@ -27,8 +28,8 @@ mysql_query("create temporary table SummaryStats (LOG_ID int, LOCATION VARCHAR(4
 // 1.  Part of the appropriate contest
 // 2.  Part of this year's running
 // 3.  Identify whether it's an in-state entry
-$result = mysql_query("select distinct LOG.ID, QSO.QTH_SENT, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER, QSO where CONTEST_YEAR = " . $thisyear .
-  " and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECK' and QSO.QTH_SENT = MULTIPLIER.NAME and QSO.LOG_ID = LOG.ID", $link);
+$result = mysql_query("select distinct LOG.ID, SCORE.QTH, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER, SCORE where CONTEST_YEAR = " . $thisyear .
+  " and CONTEST_NAME = 'CA-QSO-PARTY' and OPERATOR_CATEGORY <> 'CHECK' and SCORE.QTH = MULTIPLIER.NAME and SCORE.LOG_ID = LOG.ID", $link);
 
 if ($result) {
   while ($line = mysql_fetch_row($result)) {
@@ -39,18 +40,6 @@ else {
   print "Query failed: " . mysql_error() . "\n";
 }
 
-function CountMultipliers($multipliertest, $varname) {
-  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, COUNT(distinct QSO.QTH_RECEIVED) FROM SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.LOG_ID = LOG.ID and MULTIPLIER.NAME = QSO.QTH_RECEIVED and " . $multipliertest . " and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
-  while ($line = mysql_fetch_row($result)) {
-    mysql_query("update SummaryStats set " . $varname . " = " . $line[2] . " where LOG_ID = " . $line[0] . " and LOCATION = '" . $line[1] . "' limit 1")   or die("Cannot change SummaryStats: " . mysql_error());
-  }
-  mysql_query("update SummaryStats set " . $varname . " = 0 where " . 
-    $varname . " is null");
-}
-
-// CountMultipliers("MULTIPLIER.TYPE = 'COUNTY'", "CACounties");
-// CountMultipliers("(MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE')",
-//		 "StatesAndProvinces");
 
 // The state count does not include California yet, so add one if at least
 // 1 CA county was worked.
@@ -65,55 +54,14 @@ if ($res) {
   }
 }
 
-function GetModeCounts($mode) {
-  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, SUM(IF(QSO.GREEN_SCORE in ('OK', 'BYE'),1.0,0.5)) from SummaryStats, LOG, QSO where SummaryStats.LOG_ID = LOG.ID and LOG.ID = QSO.LOG_ID and QSO.QTH_SENT = SummaryStats.LOCATION and QSO.MODE = '" . $mode . "' and " . VALIDQSO . " group by SummaryStats.LOG_ID, SummaryStats.LOCATION");
-  if ($result) {
-    while ($line = mysql_fetch_row($result)) {
-      mysql_query("update SummaryStats set " . $mode . "QSOs = " . $line[2] . " where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1] . "' limit 1");
-    }
-    mysql_query("update SummaryStats set " . $mode . "QSOs = 0 where " . $mode .
-		"QSOs is null");
-  }
-  else {
-    print "Query failed: " . mysql_error() . "\n";
+$res = mysql_query("select SummaryStats.LOG_ID, LOCATION, T2_58 from SummaryStats, SCORE where SCORE.LOG_ID = SummaryStats.LOG_ID and SCORE.QTH = LOCATION and T2_58 is not NULL") or die("Cannot query SCORE: " . mysql_error());
+if ($res) {
+  while ($line = mysql_fetch_row($res)) {
+    mysql_query("update SummaryStats set TimeForAllMultipliers = \"" . $line[2] . "\" where LOG_ID = " . $line[0] . " and LOCATION = \"" . $line[1] . "\" limit 1");
   }
 }
 
-// GetModeCounts("CW");
-// GetModeCounts("PH");
 
-// Calculate the total score based on information in the table
-//mysql_query("update SummaryStats set TotalScore = Multipliers * (3*CWQSOs + 2*PHQSOs)") or die("Calculate total score failed:" .  mysql_error());
-
-
-function BestTimeQuery($instatetest, $multipliertest) {
-  // Calculate best time to 58 for class of stations
-  $result = mysql_query("select SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED, MIN(QSO.QSO_DATE) as DATE from SummaryStats, LOG, QSO, MULTIPLIER where SummaryStats.LOG_ID = LOG.ID and SummaryStats.LOCATION = QSO.QTH_SENT and " . $instatetest . " and LOG.ID = QSO.LOG_ID and LOG.OPERATOR_CATEGORY='SINGLE-OP' and SummaryStats.Multipliers = 58 and " . VALIDQSO . " and QSO.QTH_RECEIVED = MULTIPLIER.NAME and " . $multipliertest . " GROUP BY SummaryStats.LOG_ID, SummaryStats.LOCATION, QSO.QTH_RECEIVED ORDER BY SummaryStats.LOG_ID asc, SummaryStats.LOCATION asc, DATE desc");
-
-  if ($result) {
-    $previd = -9999;
-    $prevloc = "";
-
-    while ($line = mysql_fetch_row($result)) {
-      // because of the order by, the first line for each id is the last
-      // multiplier to be found
-      if (($line[0] != $previd) or (strcmp($line[1], $prevloc) != 0)) {
-	$previd = $line[0];
-	$prevloc = $line[1];
-	mysql_query("update SummaryStats set TimeForAllMultipliers = '" . $line[3] . "' where LOG_ID = " . $line[0] . " and LOCATION='" . $line[1]. "' limit 1") or die("Unable to update" . mysql_error());
-	mysql_query("update SCORE set T2_58 = '" . $line[3] . "' where LOG_ID = " . $line[0] . " and QTH = '" . $line[1] . "' limit 1") or die("Unable to update SCORE table: " .mysql_error());
-      }
-    }
-  }
-  else {
-    print "Query failed: " . mysql_error() . "\n";
-  }
-}
-
-BestTimeQuery("SummaryStats.InState",
-	      "(MULTIPLIER.TYPE = 'STATE' or MULTIPLIER.TYPE = 'PROVINCE')");
-BestTimeQuery("NOT SummaryStats.InState",
-	      "MULTIPLIER.TYPE = 'COUNTY'");
 
 function EntryClassStr($line) {
   $ecs = "";
@@ -220,9 +168,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Results (CA)");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft US Results (CA)");
   $pdf->ReportCategories($cats);
-  $pdf->Output("CA_report_final.pdf", "F");
+  $pdf->Output("CA_report_draft.pdf", "F");
 }
 else {
   print "Report query failed: " . mysql_error() . "\n";
@@ -247,9 +195,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Results (US)");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft US Results (US)");
   $pdf->ReportCategories($cats);
-  $pdf->Output("US_report_final.pdf", "F");
+  $pdf->Output("US_report_draft.pdf", "F");
 }
 
 $cats = array();
@@ -271,9 +219,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Canadian Results");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft Canadian Results");
   $pdf->ReportCategories($cats);
-  $pdf->Output("Canadian_report_final.pdf", "F");
+  $pdf->Output("Canadian_report_draft.pdf", "F");
 }
 
 $cats = array();
@@ -295,9 +243,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  DX Results");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft DX Results");
   $pdf->ReportCategories($cats);
-  $pdf->Output("DX_report_final.pdf", "F");
+  $pdf->Output("DX_report_draft.pdf", "F");
 }
 
 require_once('summary_lib.php');
@@ -409,10 +357,10 @@ $caclubs = array();
 ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 3"), $caclubs);
 $ocaclubs = array();
 ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 3"), $ocaclubs);
-$pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Results");
+$pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Draft Club Results");
 $pdf->ReportClubs($caclubs, "California Clubs");
 $pdf->ReportClubs($ocaclubs, "Non-California Clubs");
-$pdf->Output("Club_report_final.pdf", "F");
+$pdf->Output("Club_report_draft.pdf", "F");
 
 
 $cats = array();
@@ -504,11 +452,11 @@ $besttimes = CalculateBestTimes();
 
 $clubs = CalculateBestClubs();
 
-$pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) - Summary Report");
+$pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) - Draft Summary Report");
 $pdf->LeftColumn($cats, QueryBestMobile(), $mostssb->GetEntries(), $mostcw->GetEntries());
 $pdf->RightColumn($topca, $topnonca, $clubs, $besttimes);
 
-$pdf->Output("summary_final.pdf", "F");
+$pdf->Output("summary_draft.pdf", "F");
 // At this point, the intent is that every element of SummaryStats has its
 // correct value.
 
