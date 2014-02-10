@@ -222,7 +222,7 @@ class NCCCReportPDF extends TCPDF {
     $this->WriteHtml($str);
   }
 
-  public function ReportCategories($categories) {
+  public function ReportCategories($categories, $checklogs) {
     foreach ($categories as $category) {
       if ($this->GetY() >= $this->last_line) {
 	$this->AddPage();
@@ -233,7 +233,10 @@ class NCCCReportPDF extends TCPDF {
       $catstr .= "</table>\n";
       $this->WriteHTML($catstr);
     }
-    $this->WriteHTML("<p>L = Low Power<br>\nQ = QRP<br>\nM/M = Multi-Multi<br>\nM/S = Multi-Single<br>\nYL = YL Operator<br>\nM = Mobile</p>");
+    if ($checklogs and !empty($checklogs)) {
+      $this->WriteHTML("<p><b>Checklogs:</b> " . implode(", ", $checklogs) . ".<br></p>\n\n");
+    }
+    $this->WriteHTML("<p>E = County Expedition<br>\nL = Low Power<br>\nQ = QRP<br>\nM/M = Multi-Multi<br>\nM/S = Multi-Single<br>\nYL = YL Operator<br>\nM = Mobile</p>");
     $this->WriteFootnotes();
   }
 

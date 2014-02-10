@@ -74,9 +74,9 @@ function EntryClassStr($line) {
   /* else if (strcmp($line[1], "SINGLE-OP") == 0) { */
   /*   $ecs = "S"; */
   /* } */
-  /* else if (strcmp($line[1], "CHECK") == 0) { */
-  /*   $ecs = "C"; */
-  /* } */
+  else if (strcmp($line[1], "CHECK") == 0) {
+     $ecs = "C"; 
+  }
   if (strcmp($line[7],"LOW") == 0) {
     $ecs = $ecs . " L";
   }
@@ -147,6 +147,22 @@ function EntryFromRow($row)
   return $ent;
 }
 
+function GetCheckLogs($year, $reporttype)
+{
+  $checklogs = array();
+  $chklog = mysql_query("select LOG.CALLSIGN from LOG, MULTIPLIER where LOG.OPERATOR_CATEGORY = 'CHECK' and LOG.STATION_LOCATION = MULTIPLIER.NAME and LOG.CONTEST_YEAR = " . $year . " and (" . 
+			$reporttype . ") order by LOG.CALLSIGN asc");
+  if ($chklog) {
+    while ($ckline = mysql_fetch_row($chklog)) {
+      $checklogs[] = $ckline[0];
+    }
+  }
+  else {
+    print "Report query failed: " . mysql_error() . "\n";
+  }
+  return $checklogs;
+}
+
 
 
 $cats = array();
@@ -169,7 +185,7 @@ if ($res) {
     unset($cat);
   }
   $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft US Results (CA)");
-  $pdf->ReportCategories($cats);
+  $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'COUNTY'"));
   $pdf->Output("CA_report_draft.pdf", "F");
 }
 else {
@@ -196,7 +212,7 @@ if ($res) {
     unset($cat);
   }
   $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft US Results (US)");
-  $pdf->ReportCategories($cats);
+  $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'STATE'"));
   $pdf->Output("US_report_draft.pdf", "F");
 }
 
@@ -220,7 +236,7 @@ if ($res) {
     unset($cat);
   }
   $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft Canadian Results");
-  $pdf->ReportCategories($cats);
+  $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'PROVINCE'"));
   $pdf->Output("Canadian_report_draft.pdf", "F");
 }
 
@@ -244,7 +260,7 @@ if ($res) {
     unset($cat);
   }
   $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Draft DX Results");
-  $pdf->ReportCategories($cats);
+  $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'COUNTRY'"));
   $pdf->Output("DX_report_draft.pdf", "F");
 }
 
@@ -284,7 +300,7 @@ function QueryBestMobile()
 
 function QueryBestTimes($instate)
 {
-  $res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and TimeForAllMultipliers is not NULL and SummaryStats.LOCATION = MULTIPLIER.NAME and " . $instate . " order by TimeForAllMultipliers asc limit 1");
+  $res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and TimeForAllMultipliers is not NULL and LOG.OPERATOR_CATEGORY = 'SINGLE-OP' and SummaryStats.LOCATION = MULTIPLIER.NAME and " . $instate . " order by TimeForAllMultipliers asc limit 1");
   if ($res) {
     while ($line = mysql_fetch_row($res)) {
       $ent = EntryFromRow($line);
@@ -315,7 +331,7 @@ function ParseClubResults($res, &$clubs)
   if ($res) {
     while ($line = mysql_fetch_row($res)) {
       $club = new Club($line[1], intval($line[3]), $line[2], 
-		       strcmp($line[4], "OCA") == 0); // GROSS HACK!!!!
+		       strcmp($line[4], "CA") == 0); // GROSS HACK!!!!
       $clubs[] = $club;
     }
   }
@@ -407,7 +423,7 @@ $cats[] = QuerySummaryCat($cat,
 QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' and OVERLAY_YL ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 
-$cat = new EntryCategory("TOP Single-Op Youth", array(), false, "CA and Non-CA");
+$cat = new EntryCategory("TOP Single-Op Youth", array(), false, "CA and Non-CA", "single-op youth");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and OVERLAY_YOUTH ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
 QuerySummaryCat($cat,

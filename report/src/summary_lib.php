@@ -360,7 +360,7 @@ class NCCCSummaryPDF extends TCPDF {
     $this->WriteMostQSOs($str, "SSB", $ssb, "PhoneTotal", $widths);
     $this->WriteMostQSOs($str, "CW", $cw, "CWTotal", $widths);
     $str .= "</table>";
-    $str .= "<p style=\"color:#ff0000;\"><sup>*</sup>New Record</p>";
+    $str .= "<p style=\"color:#ff0000;\"><sup>*</sup>New All-time Record</p>";
     $this->WriteHTML($str);
   }
 
