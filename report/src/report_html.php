@@ -170,30 +170,32 @@ class NCCCReportPDF extends TCPDF {
     $this->SetFont('helvetica','', $this->fontsize);
     foreach ($entries as $entry) {
       list ($sign, $extraline) = $this->StationAndOps($entry);
+      $checklog = ((strpos($entry->GetEntryClass(), "C") !== false ) 
+		   ? "style=\"font-style:italics;\" " : "");
 
       $str .= ("<tr " . ($entry->GetNewRecord() ? "style=\"color:#ff0000;\"" : 
-			 "") . ">\n");
-      $str .= ("  <td width=\"" . $this->columnwidths[0] .
+			 "") . $checklog . ">\n");
+      $str .= ("  <td " . $checklog . "width=\"" . $this->columnwidths[0] .
 	       "%\">" . $sign . "</td>\n");
-      $str .= ("  <td align=\"right\" width=\"" . $this->columnwidths[1] .
+      $str .= ("  <td " . $checklog . "align=\"right\" width=\"" . $this->columnwidths[1] .
 	       "%\">" . $this->strformat($entry->GetNumCW()) .
 	       "</td>\n");
-      $str .= ("  <td align=\"right\" width=\"" . $this->columnwidths[2] .
+      $str .= ("  <td " . $checklog . "align=\"right\" width=\"" . $this->columnwidths[2] .
 	       "%\">" . $this->strformat($entry->GetNumPH()) .
 	       "</td>\n");
-      $str .= ("  <td align=\"right\" width=\"" . $this->columnwidths[3] .
+      $str .= ("  <td " . $checklog . "align=\"right\" width=\"" . $this->columnwidths[3] .
 	       "%\">" . 
 	       $this->strformat($entry->GetNumPH()+$entry->GetNumCW()) .
 	       "</td>\n");
-      $str .= ("  <td align=\"right\" width=\"" . $this->columnwidths[4] .
+      $str .= ("  <td " . $checklog . "align=\"right\" width=\"" . $this->columnwidths[4] .
 	       "%\">" . 
 	       $this->strformat($entry->GetNumMult()) .
 	       "</td>\n");
-      $str .= ("  <td align=\"right\" width=\"" . $this->columnwidths[5] .
+      $str .= ("  <td " . $checklog . "align=\"right\" width=\"" . $this->columnwidths[5] .
 	       "%\">" . 
 	       $this->strformat($entry->GetTotalScore()) .
 	       "</td>\n");
-      $str .= ("  <td align=\"center\" width=\"" . $this->columnwidths[6] .
+      $str .= ("  <td " . $checklog . "align=\"center\" width=\"" . $this->columnwidths[6] .
 	       "%\">" . 
 	       $entry->GetEntryClass() .
 	       "</td>\n");
@@ -236,7 +238,7 @@ class NCCCReportPDF extends TCPDF {
     if ($checklogs and !empty($checklogs)) {
       $this->WriteHTML("<p><b>Checklogs:</b> " . implode(", ", $checklogs) . ".<br></p>\n\n");
     }
-    $this->WriteHTML("<p>E = County Expedition<br>\nL = Low Power<br>\nQ = QRP<br>\nM/M = Multi-Multi<br>\nM/S = Multi-Single<br>\nYL = YL Operator<br>\nM = Mobile</p>");
+    $this->WriteHTML("<p><i>C = Checklog</i><br>\nE = County Expedition<br>\nL = Low Power<br>\nM = Mobile<br>\nM/M = Multi-Multi<br>\nM/S = Multi-Single<br>\nQ = QRP<br>\nYL = YL Operator</p>");
     $this->WriteFootnotes();
   }
 
