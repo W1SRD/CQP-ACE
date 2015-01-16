@@ -1,4 +1,5 @@
 #!/bin/env ruby
+# -*- coding: utf-8 -*-
 #
 # File:        EditDist.rb
 # Copyright:   (c) 2014 Tom Epperly

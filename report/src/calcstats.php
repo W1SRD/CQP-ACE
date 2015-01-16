@@ -380,12 +380,12 @@ $pdf->Output("Club_report_final.pdf", "F");
 
 
 $cats = array();
-$cat = new EntryCategory("TOP 3 Single-Op", array(), true, "California", "all time high CA");
+$cat = new EntryCategory("TOP 3 Single-Op High Power", array(), true, "California", "all time high CA");
 $cats[] = QuerySummaryCat($cat,
-			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
-$cat = new EntryCategory("TOP 3 Single-Op", array(), true, "Non-California", "all time high non-CA");
+			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='HIGH' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
+$cat = new EntryCategory("TOP 3 Single-Op High Power", array(), true, "Non-California", "all time high non-CA");
 $cats[] = QuerySummaryCat($cat,
-			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
+			  " and MULTIPLIER.TYPE<>'County' and OPERATOR_CATEGORY='SINGLE-OP' and POWER_CATEGORY='HIGH' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 3");
 $cat = new EntryCategory("TOP Multi-Single", array(), false, "CA and Non-CA", "multi-single");
 $cats[] = QuerySummaryCat($cat,
 			  " and MULTIPLIER.TYPE='County' and OPERATOR_CATEGORY='MULTI-SINGLE' ORDER BY TotalScore desc, LOG.CALLSIGN asc LIMIT 1");
