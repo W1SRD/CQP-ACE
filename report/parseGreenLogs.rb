@@ -5,6 +5,8 @@
 #
 require 'set'
 require 'mysql2'
+require 'date'
+require 'htmlentities'
 require 'getoptlong'
 require 'levenshtein'
 
@@ -62,6 +64,7 @@ NON_CA_STRICT = lookupCollection(db, " TYPE != 'COUNTY' and NAME != 'XXXX' and N
 CLUB_MAP = makeClubMap(db)
 
 def lookupClub(clubName, filename)
+  clubName = clubName.upcase
   if CLUB_MAP.has_key?(clubName)
     return CLUB_MAP[clubName]
   end
@@ -80,7 +83,7 @@ def lookupClub(clubName, filename)
 end
 
 class CQPLog
-  CALLSIGNREGEX = /^\d?[A-Z]{1,2}\d{1,4}[A-Z]{1,4}(\/(\d+|[A-Z]+\d*))?$/
+  CALLSIGNREGEX = /^([A-Z]{1,2}\/)?\d?[A-Z]{1,2}\d{1,4}[A-Z]{1,4}(\/(\d+|[A-Z]+\d*))?$/
   CA_QTH_STRICT = Set.new(CA_COUNTIES_STRICT)
 
   # CA is invalid -- must log county
@@ -91,7 +94,7 @@ class CQPLog
   CA_VALID = Set.new(NON_CA_STRICT + CA_COUNTIES_STRICT)
   NON_CA_VALID = CA_QTH_STRICT
 
-  QSOSTRICT=/^QSO: +(\d+) +([A-Z]{2}) +(\d{4})-(\d{2})-(\d{2}) +(\d{4}) +([\/A-Z0-9]+) +(\d+) +([A-Z]{2}|[A-Z]{4}) +([\/A-Z0-9]+) +(\d+) +([A-Z]+)\s*\{[^\}]*\}\s*$/
+  QSOSTRICT=/^QSO: +(\d+) +([A-Z]{2}) +(\d{4})-(\d{2})-(\d{2}) +(\d{4}) +([\/A-Z0-9]+) +(\d+) +([A-Z]{2}|[A-Z]{4}) +([\/A-Z0-9]+) +(\d+) +([A-Z]+)\s*((\d+)\s*)?(\{[^\}]*\}\s*)?$/
 
   def initialize
     @logID = nil
@@ -103,7 +106,8 @@ class CQPLog
     @opclass = nil
     @power = nil
     @stationcat = "FIXED"
-    @transcat = nil
+    @transcat = "ONE"
+    @submitted = nil
     @claimed = nil
     @club = nil
     @clubID = nil
@@ -154,6 +158,8 @@ class CQPLog
           @opcat = :checklog
           @power = "CHECK"
         end
+      when /^X-CQP-TIMESTAMP:\s*(.*)\s*/
+        @submitted = DateTime.parse($1).to_time
       when /^CATEGORY-POWER:\s*(HIGH|LOW|QRP)\s/
         if (@opcat == :checklog)
           @power = "CHECK"
@@ -180,7 +186,7 @@ class CQPLog
         end
       when /^CLAIMED-SCORE:\s*(\d+)\s*$/
         @claimed = $1.to_i
-      when /^CLUB:\s*(.*)\s*/
+      when /^CLUB:\s*(.*)\s*/i
         @club = $1.strip.gsub(/\s+/, ' ')
         if @club.empty?
           @club = nil
@@ -237,6 +243,9 @@ class CQPLog
         end
       when /^X-CQP-CALLSIGN:\s*(.*)\s*/
         txt = $1.strip.upcase
+        if txt.index('&')
+          txt = HTMLEntities.new.decode(txt)
+        end
         if CALLSIGNREGEX.match(txt)
           if @callsign and @callsign != txt
             if $bad_file
@@ -282,6 +291,12 @@ class CQPLog
           @opclass = "CHECK"
           @power = "CHECK"
         end
+        if  "SINGLE-ASSISTED" == @opclass
+          @opclass = "SINGLE-OP-ASSIST"
+        elsif "SINGLE" == @opclass
+          @opclass = "SINGLE-OP"
+        end
+          
       when /^X-CQP-POWER:\s*(.*)\s*/
         if @opclass == "CHECK"
           @power = "CHECK"
@@ -311,6 +326,31 @@ class CQPLog
     @header = hdr
   end
 
+  def opclass
+    if @opclass
+      "\"" + @opclass + "\""
+    else
+      case @opcat
+      when :checklog
+        "\"CHECK\""
+      when :single
+        @assisted ? "\"SINGLE-OP-ASSIST\"" : "\"SINGLE-OP\""
+      when :multi
+        ("ONE" == @transcat) ? "\"MULTI-SINGLE\"" : "\"MULTI-MULTI\""
+      else
+        "NULL"
+      end
+    end
+  end
+
+  def submitted
+    if @submitted
+      @submitted.strftime("\"%Y-%m-%d %H:%M:%S\"")
+    else
+      "NOW()"
+    end
+  end
+
   def str(db, str)
     if str
       "'" + db.escape(str.to_s) + "'"
@@ -318,6 +358,9 @@ class CQPLog
       "NULL"
     end
   end
+
+  
+  
   def lookupClubName(db)
     if @clubID
       rows = db.query("select NAME from CLUB where ID = #{@clubID}")
@@ -336,7 +379,7 @@ class CQPLog
   def addToDB(db)
     clubName = lookupClubName(db)
     @sentQTH.each { |qth|
-      db.query("insert into LOG (CALLSIGN, CONTEST_NAME, STATION_OWNER_CALLSIGN, CONTEST_YEAR, EMAIL_ADDRESS, STATION_LOCATION, OPERATOR_CATEGORY, POWER_CATEGORY, STATION_CATEGORY, TRANSMITTER_CATEGORY, CLUB, SUBMISSION_DATE, OVERLAY_YL, OVERLAY_YOUTH, OVERLAY_NEW_CONTESTER, CLAIMED_SCORE, LOG_FILENAME, SOAPBOX, CABRILLO_HEADER, NUMBER_QSO_RECS, QSO_RECS_PRESENT,  LAST_UPDATED) values (#{str(db, @callsign)}, 'CA-QSO-PARTY', #{str(db, @stationOwner)}, 2014, #{str(db,@email)}, #{str(db, qth)}, #{str(db, @opclass)}, #{str(db, @power)}, #{str(db, @stationcat)}, #{str(db, @transcat)}, #{str(db, clubName)}, NOW(), #{@female}, #{@youth}, #{((@newcontester and @qsoCount >= 100) ? 1 : 0) }, #{@claimed ? @claimed.to_s : "NULL"}, #{str(db, @filename)}, #{str(db, @soapbox.empty? ? nil : @soapbox.join("\n"))}, #{str(db, @header)}, #{@qsoCount ? @qsoCount.to_s : "NULL"}, 1, NOW())\n")
+      db.query("insert into LOG (CALLSIGN, CONTEST_NAME, STATION_OWNER_CALLSIGN, CONTEST_YEAR, EMAIL_ADDRESS, STATION_LOCATION, OPERATOR_CATEGORY, POWER_CATEGORY, STATION_CATEGORY, TRANSMITTER_CATEGORY, CLUB, SUBMISSION_DATE, OVERLAY_YL, OVERLAY_YOUTH, OVERLAY_NEW_CONTESTER, CLAIMED_SCORE, LOG_FILENAME, SOAPBOX, CABRILLO_HEADER, NUMBER_QSO_RECS, QSO_RECS_PRESENT,  LAST_UPDATED) values (#{str(db, @callsign)}, 'CA-QSO-PARTY', #{str(db, @stationOwner)}, 2015, #{str(db,@email)}, #{str(db, qth)}, #{opclass}, #{str(db, @power)}, #{str(db, @stationcat)}, #{str(db, @transcat)}, #{str(db, clubName)}, #{submitted}, #{@female}, #{@youth}, #{((@newContester and @qsoCount >= 100) ? 1 : 0) }, #{@claimed ? @claimed.to_s : "NULL"}, #{str(db, @filename)}, #{str(db, @soapbox.empty? ? nil : @soapbox.join("\n"))}, #{str(db, @header)}, #{@qsoCount ? @qsoCount.to_s : "NULL"}, 1, NOW())\n")
       @logID = lastID(db)
       if @logID
         @operators.each { |op|
@@ -350,7 +393,7 @@ class CQPLog
     }
   end
 
-  attr_reader :sentQTH, :filename
+  attr_reader :sentQTH, :filename, :callsign
 end
 
 logs = [ ]
@@ -372,11 +415,18 @@ rows = db.query("select OPERATOR.ID, LOG.ID from OPERATOR, LOG  where LOG.CONTES
 rows.each(:as => :array) { |row|
   oplist << row[0]
 }
-# db.query("delete from OPERATOR where ID in (#{oplist.join(", ")}) limit #{oplist.length}")
-# db.query("delete from LOG where CONTEST_YEAR = #{YEAR}")
+if oplist.length > 0
+  db.query("delete from OPERATOR where ID in (#{oplist.join(", ")}) limit #{oplist.length};")
+end
+db.query("delete from LOG where CONTEST_YEAR = #{YEAR}")
 logs.each { |log|
   if log.sentQTH.length != 1
     print log.filename + " has multiple sent QTHs: " + log.sentQTH.to_a.sort.join(" ") + "\n"
   end
-  log.addToDB(db)
+  begin
+    log.addToDB(db)
+  rescue
+    print log.callsign +  " has an error\n"
+    raise
+  end
 }

@@ -15,25 +15,52 @@ date_default_timezone_set("Europe/London");
 
 // Calculate a report for this year's running of the CQP. This could
 // be replaced by some other way of setting the year.
-$thisyear = 2013;
+$thisyear = 2014;
+$reportready = "final";
+// $reportname = "DRAFT ";   // or empty string
+$reportname = "";
 
 $link = mysql_connect('localhost', 'dbtest', 'dbtest') or die("Connect not connect to database: " . mysql_error());
 mysql_select_db('CQPACE', $link) or die("Could not select database");
 
 // Create a temporary table to hold stats needed for the reports
-mysql_query("create temporary table SummaryStats (LOG_ID int, LOCATION VARCHAR(4), CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs DECIMAL(10,1), PHQSOs DECIMAL(10,1), TotalScore DECIMAL(10,1), TimeForAllMultipliers DATETIME, PRIMARY KEY (LOG_ID, LOCATION))", $link)  or die("Cannot create SummaryStats: " . mysql_error());
+mysql_query("create temporary table SummaryStats (LOG_ID int, LOCATION VARCHAR(4), CACounties int, StatesAndProvinces int, Multipliers int, InState boolean, CWQSOs DECIMAL(10,1), PHQSOs DECIMAL(10,1), TotalScore DECIMAL(10,1), TimeForAllMultipliers DATETIME, VEProvince VARCHAR(32), PRIMARY KEY (LOG_ID, LOCATION))", $link)  or die("Cannot create SummaryStats: " . mysql_error());
 // mysql_query("delete from SummaryStats") or die("Cannot delete");
 
 // The purpose of this question is to select the logs that are:
 // 1.  Part of the appropriate contest
 // 2.  Part of this year's running
 // 3.  Identify whether it's an in-state entry
-$result = mysql_query("select distinct LOG.ID, SCORE.QTH, MULTIPLIER.TYPE = 'COUNTY' from LOG, MULTIPLIER, SCORE where CONTEST_YEAR = " . $thisyear .
+$result = mysql_query("select distinct LOG.ID, SCORE.QTH, MULTIPLIER.TYPE = 'COUNTY', LOG.CALLSIGN, MULTIPLIER.DESCRIPTION from LOG, MULTIPLIER, SCORE where CONTEST_YEAR = " . $thisyear .
   " and CONTEST_NAME = 'CA-QSO-PARTY' and SCORE.QTH = MULTIPLIER.NAME and SCORE.LOG_ID = LOG.ID", $link);
+
+function CanadaProvince($province, $callsign)
+{
+    if (strcmp($province, "Maritimes") == 0) {
+        $prefix = substr($callsign, 0, 3);
+        if (strcmp($prefix, "VY2") == 0) {
+            return "Prince Edward Island (Maritimes)";
+        } elseif (strcmp($prefix, "VE9") == 0) {
+            return "New Brunswick (Maritimes)";
+        } elseif (strcmp($prefix, "VO1") == 0) {
+            return "Newfoundland (Maritimes)";
+        } elseif (strcmp($prefix, "VO2") == 0) {
+            return "Labrador (Maritimes)";
+        } elseif ((strcmp($prefix, "VA1") == 0) || (strcmp($prefix, "VE1") == 0)) {
+            return "Nova Scotia (Maritimes)";
+        }
+        else {
+            return "Unknown";
+        }
+    }
+    else {
+        return $province;
+    }
+}
 
 if ($result) {
   while ($line = mysql_fetch_row($result)) {
-    mysql_query("insert INTO SummaryStats (LOG_ID, LOCATION, InState) VALUES (". $line[0] . ", \"" . $line[1] . "\", " . $line[2] . ")", $link)   or die("Cannot insert into SummaryStats: " . mysql_error());
+      mysql_query("insert INTO SummaryStats (LOG_ID, LOCATION, InState, VEProvince) VALUES (". $line[0] . ", \"" . $line[1] . "\", " . $line[2] . ", \"" . CanadaProvince($line[4], $line[3]) . "\")", $link)   or die("Cannot insert into SummaryStats: " . mysql_error());
   }
 }
 else {
@@ -99,7 +126,7 @@ define("ENTRY_QUERY_STRING", "select SummaryStats.LOCATION, LOG.OPERATOR_CATEGOR
 
 function NewRegionalRecord($id, $loc)
 {
-  $regquery = mysql_query("select REGIONAL.ID from LOG, MULTIPLIER, REGIONAL where LOG.ID=" . $id . " and OPERATOR_CATEGORY <> 'CHECK' and REGIONAL.LOG_ID = LOG.ID and REGIONAL.MULT_ID = MULTIPLIER.ID and MULTIPLIER.NAME = '" . $loc . "' limit 1");
+  $regquery = mysql_query("select REGIONAL.ID from LOG, MULTIPLIER, REGIONAL where LOG.ID=" . $id . " and LOG.OPERATOR_CATEGORY <> 'CHECK' and REGIONAL.LOG_ID = LOG.ID and REGIONAL.MULT_ID = MULTIPLIER.ID and MULTIPLIER.NAME = '" . $loc . "' limit 1");
   if ($regquery) {
     while ($line = mysql_fetch_row($regquery)) {
       return true;
@@ -108,11 +135,34 @@ function NewRegionalRecord($id, $loc)
   return false;
 }
 
+function RegionalClass($opclass, $power)
+{
+  if (strcmp($opclass, "SINGLE-OP") == 0) {
+    $result = "SO ";
+  }
+  else if (strcmp($opclass, "MULTI-SINGLE") == 0) {
+    $result = "M/S ";
+  }
+  else {
+    $result = "M/M ";
+  }
+  if (strcmp($power, "LOW") == 0) {
+    $result = $result . "LP";
+  }
+  else if (strcmp($power, "HIGH") == 0) {
+    $result = $result . "HP";
+  }
+  else {
+    $result = $result . "QRP";
+  }
+  return $result;
+}
+
 function CheckRecords(&$ent, &$row)
 {
   $newrecord = false;
   if (NewRegionalRecord($row[11], $row[14])) {
-    $ent->AddFootnote($row[8]);
+    $ent->AddFootnote(RegionalClass($row[1], $row[7]) . " " . $row[8]);
     $newrecord = true;
   }
   $res = mysql_query("select NAME from SPECIAL where LOG_ID = " . 
@@ -150,11 +200,16 @@ function EntryFromRow($row)
 function GetCheckLogs($year, $reporttype)
 {
   $checklogs = array();
-  $chklog = mysql_query("select LOG.CALLSIGN from MULTIPLIER, LOG left outer join SCORE on LOG.ID = SCORE.LOG_ID where SCORE.LOG_ID is NULL and LOG.OPERATOR_CATEGORY = 'CHECK' and LOG.STATION_LOCATION = MULTIPLIER.NAME and LOG.CONTEST_YEAR = " . $year . " and (" . 
+  $chklog = mysql_query("select LOG.CALLSIGN, LOG.STATION_OWNER_CALLSIGN from MULTIPLIER, LOG left outer join SCORE on LOG.ID = SCORE.LOG_ID where SCORE.LOG_ID is NULL and LOG.OPERATOR_CATEGORY = 'CHECK' and LOG.STATION_LOCATION = MULTIPLIER.NAME and LOG.CONTEST_YEAR = " . $year . " and (" . 
 			$reporttype . ") order by LOG.CALLSIGN asc");
   if ($chklog) {
     while ($ckline = mysql_fetch_row($chklog)) {
-      $checklogs[] = $ckline[0];
+        if ($ckline[1]) {
+            $checklogs[] = $ckline[0] . " (@" . $ckline[1] . ")";
+        }
+        else {
+            $checklogs[] = $ckline[0];
+        }
     }
   }
   else {
@@ -184,9 +239,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Results (CA)");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  " . $reportname . "US Results (CA)");
   $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'COUNTY'"));
-  $pdf->Output("CA_report_final.pdf", "F");
+  $pdf->Output("CA_report_" . $reportready . ".pdf", "F");
 }
 else {
   print "Report query failed: " . mysql_error() . "\n";
@@ -211,22 +266,23 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  US Results (US)");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  " . $reportname . "US Results (US)");
   $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'STATE'"));
-  $pdf->Output("US_report_final.pdf", "F");
+  $pdf->Output("US_report_" . $reportready . ".pdf", "F");
 }
+
 
 $cats = array();
 $prevcat = '';
-$res = mysql_query(ENTRY_QUERY_STRING . " from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'PROVINCE' order by MULTIPLIER.DESCRIPTION  asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
+$res = mysql_query(ENTRY_QUERY_STRING . ", VEProvince from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and MULTIPLIER.NAME = SummaryStats.LOCATION and MULTIPLIER.TYPE = 'PROVINCE' order by VEProvince  asc, LOG.OPERATOR_CATEGORY desc, TotalScore desc");
 if ($res) {
   while ($line = mysql_fetch_row($res)) {
-    if (strcmp($line[0], $prevcat)) {
+    if (strcmp($line[15], $prevcat)) {
       if (isset($cat)) {
 	$cats[] = $cat;
       }
-      $prevcat = $line[0];
-      $cat = new EntryCategory($line[8]);
+      $prevcat = $line[15];
+      $cat = new EntryCategory($line[15]);
     }
     $ent = EntryFromRow($line);
     $cat->AddEntry($ent);
@@ -235,9 +291,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  Canadian Results");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  " . $reportname . "Canadian Results");
   $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'PROVINCE'"));
-  $pdf->Output("Canadian_report_final.pdf", "F");
+  $pdf->Output("Canadian_report_" . $reportready . ".pdf", "F");
 }
 
 $cats = array();
@@ -259,9 +315,9 @@ if ($res) {
     $cats[] = $cat;
     unset($cat);
   }
-  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  DX Results");
+  $pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93  " . $reportname . "DX Results");
   $pdf->ReportCategories($cats, GetCheckLogs($thisyear, "MULTIPLIER.TYPE = 'COUNTRY'"));
-  $pdf->Output("DX_report_final.pdf", "F");
+  $pdf->Output("DX_report_" . $reportready . ".pdf", "F");
 }
 
 require_once('summary_lib.php');
@@ -283,7 +339,7 @@ function QuerySummaryCat(&$cat, $querystr)
 function QueryBestMobile()
 {
   $mobile=NULL;
-  $res = mysql_query(ENTRY_QUERY_STRING . ", SUM(SummaryStats.PHQSOs + SummaryStats.CWQSOs) as TotalQSO from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and OPERATOR_CATEGORY <> 'CHECK' and SummaryStats.LOCATION = MULTIPLIER.NAME and LOG.STATION_CATEGORY='MOBILE' group by LOG.ID order by TotalQSO desc limit 1");
+  $res = mysql_query(ENTRY_QUERY_STRING . ", SUM(SummaryStats.PHQSOs + SummaryStats.CWQSOs) as TotalQSO from SummaryStats, LOG, MULTIPLIER where LOG.ID = SummaryStats.LOG_ID and OPERATOR_CATEGORY <> 'CHECK' and SummaryStats.LOCATION = MULTIPLIER.NAME and LOG.STATION_CATEGORY='MOBILE' group by LOG.CALLSIGN order by TotalQSO desc limit 1");
   if ($res) {
     while ($line = mysql_fetch_row($res)) {
       $ent = EntryFromRow($line);
@@ -330,8 +386,8 @@ function ParseClubResults($res, &$clubs)
 {
   if ($res) {
     while ($line = mysql_fetch_row($res)) {
-      $club = new Club($line[1], intval($line[3]), $line[2], 
-		       strcmp($line[4], "CA") == 0); // GROSS HACK!!!!
+        $club = new Club($line[1], intval($line[3]), $line[2], 0);
+        // strcmp($line[4], "CA") == 0); // GROSS HACK!!!!
       $clubs[] = $club;
     }
   }
@@ -373,10 +429,10 @@ $caclubs = array();
 ParseClubResults(QueryClubs("and CLUB.LOCATION=\"CA\"", " limit 3"), $caclubs);
 $ocaclubs = array();
 ParseClubResults(QueryClubs("and CLUB.LOCATION=\"OCA\"", " limit 3"), $ocaclubs);
-$pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  Club Results");
+$pdf = new NCCCReportPDF($thisyear . " California QSO Party (CQP)  \xe2\x80\x93  " . $reportname . "Club Results");
 $pdf->ReportClubs($caclubs, "California Clubs");
 $pdf->ReportClubs($ocaclubs, "Non-California Clubs");
-$pdf->Output("Club_report_final.pdf", "F");
+$pdf->Output("Club_report_" . $reportready . ".pdf", "F");
 
 
 $cats = array();
@@ -468,11 +524,11 @@ $besttimes = CalculateBestTimes();
 
 $clubs = CalculateBestClubs();
 
-$pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) - Summary Report");
+$pdf = new NCCCSummaryPDF($thisyear . " California QSO Party (CQP) \xe2\x80\x93 " . $reportname . "Summary Report");
 $pdf->LeftColumn($cats, QueryBestMobile(), $mostssb->GetEntries(), $mostcw->GetEntries());
 $pdf->RightColumn($topca, $topnonca, $clubs, $besttimes);
 
-$pdf->Output("summary_final.pdf", "F");
+$pdf->Output("summary_" . $reportready . ".pdf", "F");
 // At this point, the intent is that every element of SummaryStats has its
 // correct value.
 
