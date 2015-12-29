@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'mysql2'
-YEAR=2014
+YEAR=2015
 
 db = Mysql2::Client.new(:host => "localhost", :username=>"dbtest", :password=>"dbtest",
                 :database=>"CQPACE")
@@ -21,15 +21,18 @@ sidlist = [ ]
 rows.each(:as => :array) { |sid|
   sidlist << sid[0]
 }
-db.query("delete from SCORE where ID in (#{sidlist.join(", ")}) limit #{sidlist.length}")
+if not sidlist.empty?
+  db.query("delete from SCORE where ID in (#{sidlist.join(", ")}) limit #{sidlist.length}")
+end
 
 ARGF.each { |line|
   line.upcase!
   fields = line.split(DELIM)
-  if fields.length == 18
+  if fields.length == 19
     id = lookupLogID(db, fields[1], fields[16])
     if id
       db.query("insert into SCORE (LOG_ID, CALLSIGN, RAW_Q, DUPE_Q, CLAIMED_MULT, CLAIMED_CW_Q, CLAIMED_PH_Q, CLAIMED_SCORE, CHECKED_Q, D2_CW, D1_CW, D2_PH, D1_PH, CHECKED_MULT, CHECKED_SCORE, QTH, AREA) values (#{id}, \"#{fields[1]}\", #{fields[3]}, #{fields[4]}, #{fields[5]}, #{fields[6]}, #{fields[7]}, #{fields[8]}, #{fields[9]}, #{fields[10]}, #{fields[11]}, #{fields[12]}, #{fields[13]}, #{fields[14]}, #{fields[15]}, \"#{fields[16]}\", \"#{fields[17].strip}\")\n")
+      db.query("update LOG set ENTITY = #{id} where ID = #{fields[18].to_i} limit 1;")
     else
       $stderr.puts("!!! No log entry for #{fields[1]}\n")
     end

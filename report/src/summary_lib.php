@@ -33,15 +33,20 @@ class NCCCSummaryPDF extends TCPDF {
   public function Header() {
     $this->SetFillColorArray(array(204, 255, 204));
     $image_file = dirname(__FILE__)."/images/nccc_generic.png";
+    $coin_file = dirname(__FILE__)."/images/goldrushcoin-scaled.png";
     $this->Image($image_file, 36 /* x */, 36 /* y */, 0 /* w */, 
 		 $this->header_height /* h */,
     		 'PNG' /* type */, '' /* link */, 'T' /* align */,
     		 true /* resize */, 300 /* dpi */, '' /* palign */); 
-    $this->SetFont('helvetica', 'B', 16);
+    $this->SetFont('helvetica', 'B', 14);
     $this->Cell(10);
-    $this->Cell(480,$this->header_height, 
+    $this->Cell(450,$this->header_height, 
 		$this->report_title, 1, 1, 'C', true, '', 0, false,
 		'T', 'M');
+    $this->Image($coin_file, 548 /* x */, 30 /* y */, 0 /* w */, 
+		 1.5*$this->header_height /* h */,
+    		 '' /* type */, '' /* link */, 'T' /* align */,
+    		 true /* resize */, 300 /* dpi */, '' /* palign */); 
     $this->SetLineWidth(NCCCSummaryPDF::LINEWIDTH+1);
     $x = 5*72-0.5*NCCCSummaryPDF::LINEWIDTH;
     $this->Line($x,NCCCSummaryPDF::TOPMARGIN-10.5,$x,

@@ -15,9 +15,9 @@ class NCCCReportPDF extends TCPDF {
   const LEFTMARGIN = 54;
   const RIGHTMARGIN = 54;
   const PAGEWIDTH = 504;
-  const TOPMARGIN = 80;
+  const TOPMARGIN = 85;
   protected $borders = 0;
-  protected $header_height = 22;
+  protected $header_height = 44;
   protected $report_title = '';
   protected $baseline_skip = 16;
   protected $fontsize = 12;
@@ -35,9 +35,14 @@ class NCCCReportPDF extends TCPDF {
     		 true /* resize */, 300 /* dpi */, '' /* palign */); 
     $this->SetFont('helvetica', 'B', 16);
     $this->Cell(10);
-    $this->Cell(480,$this->header_height, 
-		$this->report_title, 1, 1, 'C', true, '', 0, false,
-		'T', 'M');
+    $this->MultiCell(350,$this->header_height, 
+      $this->report_title, 1, 'C', true, 0, 150, 36, true, 0,false,true,
+      'M');
+    $coin_file = dirname(__FILE__)."/images/goldrushcoin-scaled.png";
+    $this->Image($coin_file, 520 /* x */, 23 /* y */, 0 /* w */, 
+		 1.5*$this->header_height /* h */,
+    		 '' /* type */, '' /* link */, 'T' /* align */,
+    		 true /* resize */, 300 /* dpi */, '' /* palign */); 
 
   }
 
